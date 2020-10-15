@@ -4,17 +4,17 @@ import express, {
   Request,
   RequestHandler,
   Response,
-} from 'express';
-import morgan from 'morgan';
-import cors from 'cors';
-import dotenv from 'dotenv';
+} from "express";
+import morgan from "morgan";
+import cors from "cors";
+import dotenv from "dotenv";
 // import createStore from 'data-store';
 
 // // const store = createStore('store');
 
-import store from './store';
-import errorHandler from './errorHandler';
-import { generateDocs } from './generator';
+import store from "./store";
+import errorHandler from "./errorHandler";
+import { generateDocs } from "./generator";
 
 const DEFAULT_PORT = 8000;
 
@@ -35,28 +35,28 @@ export interface Config {
 }
 
 function init(config: Config | undefined = { useCors: true }): Express {
-  require('express-async-errors');
+  require("express-async-errors");
   dotenv.config(config.dotenvConfig);
   const expressApp = express();
 
-  store.set('expressApp', expressApp);
-  store.set('config', config);
-  store.set('routes', []);
+  store.set("expressApp", expressApp);
+  store.set("config", config);
+  store.set("routes", []);
 
   expressApp.use(express.json());
-  expressApp.use(morgan('short'));
+  expressApp.use(morgan("short"));
 
   if (config.useCors) {
     expressApp.use(cors());
   }
 
-  expressApp.set('port', config?.port || process.env.PORT || DEFAULT_PORT);
+  expressApp.set("port", config?.port || process.env.PORT || DEFAULT_PORT);
 
-  expressApp.listen(expressApp.get('port'), () => {
+  expressApp.listen(expressApp.get("port"), () => {
     console.log(
       config.readyMessage
         ? config.readyMessage
-        : `Ready on http://localhost:${expressApp.get('port')}`,
+        : `Ready on http://localhost:${expressApp.get("port")}`,
     );
   });
 
@@ -72,13 +72,14 @@ function init(config: Config | undefined = { useCors: true }): Express {
 
 export default init;
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 interface AddRoute {
   method?: HttpMethod;
   path?: string;
   middlewares?: RequestHandler[];
   secure?: boolean;
+  requiredFields?: string[];
 }
 
 export function addRoute<Data = unknown, Params = unknown>(
@@ -93,19 +94,19 @@ export function addRoute<Data = unknown, Params = unknown>(
     data: Data;
     params: Params;
   }) => Record<string, any>,
-  { method = 'GET', path = '/', middlewares = [], secure }: AddRoute = {
-    method: 'GET',
-    path: '/',
+  { method = "GET", path = "/", middlewares = [], secure }: AddRoute = {
+    method: "GET",
+    path: "/",
     middlewares: [],
   },
 ) {
   const expressFn = _getExpressMethodFn(method);
-  const config = store.get('config') as Config;
+  const config = store.get("config") as Config;
 
   // ---Update routes list to our system.
-  const routes = store.get('routes') as { path: string; method: HttpMethod }[];
+  const routes = store.get("routes") as { path: string; method: HttpMethod }[];
   routes.push({ path, method });
-  store.set('routes', routes);
+  store.set("routes", routes);
   // ----------
 
   let authMiddleware =
@@ -119,7 +120,7 @@ export function addRoute<Data = unknown, Params = unknown>(
     throw new Error(
       `Cannot use config.secure on route ${path} as authMiddleware is undefined.`,
     );
-  } else if (typeof secure === 'boolean' && !secure) {
+  } else if (typeof secure === "boolean" && !secure) {
     authMiddleware = _placeholder;
   }
 
@@ -145,7 +146,7 @@ export function addRoute<Data = unknown, Params = unknown>(
       let result: Record<string, any> = { error: null };
 
       // might be hacky, maybe there's a better way
-      if (cb.constructor.name == 'AsyncFunction') {
+      if (cb.constructor.name == "AsyncFunction") {
         result = await cb({ req, res, data, params });
       } else {
         result = cb({ req, res, data, params });
@@ -162,25 +163,25 @@ export function addRoute<Data = unknown, Params = unknown>(
 }
 
 export function getExpressApp() {
-  const expressApp = store.get('expressApp') as Express;
+  const expressApp = store.get("expressApp") as Express;
   if (!expressApp) {
-    throw new Error('expressApp not initialized.');
+    throw new Error("expressApp not initialized.");
   }
   return expressApp;
 }
 
 function _getExpressMethodFn(method: HttpMethod) {
-  const expressApp = store.get('expressApp') as Express;
+  const expressApp = store.get("expressApp") as Express;
   switch (method) {
-    case 'GET':
+    case "GET":
       return expressApp.get.bind(expressApp);
-    case 'POST':
+    case "POST":
       return expressApp.post.bind(expressApp);
-    case 'DELETE':
+    case "DELETE":
       return expressApp.delete.bind(expressApp);
-    case 'PUT':
+    case "PUT":
       return expressApp.put.bind(expressApp);
-    case 'PATCH':
+    case "PATCH":
       return expressApp.patch.bind(expressApp);
   }
 }
