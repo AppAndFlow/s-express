@@ -91,6 +91,32 @@
 | ---- | ----------- |
 | 200 |  |
 
+### /moi/{params1}/kiki/{params2}
+
+#### GET
+##### Summary:
+
+je suis un resume
+
+##### Description:
+
+Cette route ne vaut pas dla marde.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| params1 | path |  | Yes | string |
+| params2 | path |  | Yes | string |
+| trainerId | query |  | No | string |
+| trainerAge! | query |  | Yes | string |
+
+##### Responses
+
+| Code | Description |
+| ---- | ----------- |
+| 200 |  |
+
 ### Models
 
 
@@ -127,3 +153,12 @@
 | id | string |  | Yes |
 | nom | string |  | Yes |
 | prenom | string |  | Yes |
+
+#### GetMoiParams1KikiParams2Response
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| id | string |  | Yes |
+| id2 | string |  | Yes |
+| ide3 | string |  | Yes |
+| picture | string |  | Yes |

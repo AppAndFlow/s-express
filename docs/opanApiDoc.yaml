@@ -63,9 +63,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetMeParams1KikiParams2Response"
-servers:
-  - url: "http://localhost:8000"
-    description: "URL"
+  /moi/{params1}/kiki/{params2}:
+    get:
+      summary: "je suis un resume"
+      parameters:
+        - name: "params1"
+          in: "path"
+          required: true
+          description: ""
+          schema:
+            type: "string"
+        - name: "params2"
+          in: "path"
+          required: true
+          description: ""
+          schema:
+            type: "string"
+        - name: "trainerId"
+          in: "query"
+          required: false
+          description: ""
+          schema:
+            type: "string"
+        - name: "trainerAge!"
+          in: "query"
+          required: true
+          description: ""
+          schema:
+            type: "string"
+      description: "Cette route ne vaut pas dla marde."
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMoiParams1KikiParams2Response"
 components:
   schemas:
     GetHomeResponse:
@@ -119,4 +152,21 @@ components:
         - "id"
         - "nom"
         - "prenom"
+      type: "object"
+    GetMoiParams1KikiParams2Response:
+      additionalProperties: false
+      properties:
+        id:
+          type: "string"
+        id2:
+          type: "string"
+        ide3:
+          type: "string"
+        picture:
+          type: "string"
+      required:
+        - "id"
+        - "picture"
+        - "id2"
+        - "ide3"
       type: "object"

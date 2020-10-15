@@ -21,8 +21,8 @@
 // app.post('/sign-in', userController.signIn);
 // app.get('/me', auth, userController.me);
 
-import auth from './middlewares/auth';
-import sexyExpress, { addRoute } from './sexyExpress';
+import auth from "./middlewares/auth";
+import sexyExpress, { addRoute } from "./sexyExpress";
 
 sexyExpress({
   // auth: {
@@ -31,33 +31,51 @@ sexyExpress({
   // },
 });
 
-addRoute<{ helo: string }, { dd: 'aa' }>(
+addRoute<{ helo: string }, { dd: "aa" }>(
   ({ data, params }) => {
-    return { salut: 'wooooo' };
+    return { salut: "wooooo" };
   },
   { secure: false },
 );
 
-addRoute(({ data }) => ({ leBodyDuPost: { dsad: 'dasdsa' } }), {
-  method: 'POST',
+addRoute(({ data }) => ({ leBodyDuPost: { dsad: "dasdsa" } }), {
+  method: "POST",
 });
 
 addRoute(
   ({ data }) => {
-    return { id: 'dasdasdas', nom: 'dsadasdasdas', prenom: 'test' };
+    return { id: "dasdasdas", nom: "dsadasdasdas", prenom: "test" };
   },
   {
-    method: 'GET',
-    path: '/me',
+    method: "GET",
+    path: "/me",
   },
 );
 
 addRoute(
   ({ data }) => {
-    return { id: 'dasdasdas', nom: 'dsadasdasdas', prenom: 'test' };
+    return { id: "dasdasdas", nom: "dsadasdasdas", prenom: "test" };
   },
   {
-    method: 'GET',
-    path: '/me/:params1/kiki/:params2',
+    method: "GET",
+    path: "/me/:params1/kiki/:params2",
+  },
+);
+
+addRoute(
+  ({ data }) => {
+    return {
+      id: "dasdasdas",
+      picture: "dsadasdasdas",
+      id2: "test",
+      ide3: ";dad",
+    };
+  },
+  {
+    method: "GET",
+    path: "/moi/:params1/kiki/:params2",
+    fields: ["trainerId", "trainerAge!"],
+    summary: "je suis un resume",
+    description: "Cette route ne vaut pas dla marde.",
   },
 );

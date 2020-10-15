@@ -8,11 +8,13 @@ import express, {
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
+
+import required, { isFieldRequired } from "../utils/requiredFields";
 // import createStore from 'data-store';
 
 // // const store = createStore('store');
 
-import store from "./store";
+import store, { Field, getRoutes, updateRouteStore } from "./store";
 import errorHandler from "./errorHandler";
 import { generateDocs } from "./generator";
 
@@ -31,7 +33,13 @@ export interface Config {
     version?: string;
     title?: string;
     description?: string;
+    servers?: DocServer[];
   };
+}
+
+interface DocServer {
+  url: string;
+  description: string;
 }
 
 function init(config: Config | undefined = { useCors: true }): Express {
@@ -41,7 +49,7 @@ function init(config: Config | undefined = { useCors: true }): Express {
 
   store.set("expressApp", expressApp);
   store.set("config", config);
-  store.set("routes", []);
+  updateRouteStore([]);
 
   expressApp.use(express.json());
   expressApp.use(morgan("short"));
@@ -72,14 +80,16 @@ function init(config: Config | undefined = { useCors: true }): Express {
 
 export default init;
 
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 interface AddRoute {
   method?: HttpMethod;
   path?: string;
   middlewares?: RequestHandler[];
   secure?: boolean;
-  requiredFields?: string[];
+  fields?: Field[];
+  summary?: string;
+  description?: string;
 }
 
 export function addRoute<Data = unknown, Params = unknown>(
@@ -94,7 +104,15 @@ export function addRoute<Data = unknown, Params = unknown>(
     data: Data;
     params: Params;
   }) => Record<string, any>,
-  { method = "GET", path = "/", middlewares = [], secure }: AddRoute = {
+  {
+    method = "GET",
+    path = "/",
+    middlewares = [],
+    secure,
+    fields,
+    summary = "",
+    description = "",
+  }: AddRoute = {
     method: "GET",
     path: "/",
     middlewares: [],
@@ -104,9 +122,15 @@ export function addRoute<Data = unknown, Params = unknown>(
   const config = store.get("config") as Config;
 
   // ---Update routes list to our system.
-  const routes = store.get("routes") as { path: string; method: HttpMethod }[];
-  routes.push({ path, method });
-  store.set("routes", routes);
+  const routes = getRoutes();
+  routes.push({
+    path,
+    method,
+    fields: fields || [],
+    summary,
+    description,
+  });
+  updateRouteStore(routes);
   // ----------
 
   let authMiddleware =
@@ -129,7 +153,24 @@ export function addRoute<Data = unknown, Params = unknown>(
     authMiddleware,
     ...middlewares,
     async (req: Request, res: Response) => {
-      // todo add logic to handle openapi generation
+      if (fields && fields.length) {
+        const requiredFields: string[] = [];
+
+        fields.forEach((field) => {
+          if (typeof fields === "string" && isFieldRequired(field as string)) {
+            requiredFields.push(field as string);
+          } else if (typeof field === "object" && !field.optional) {
+            requiredFields.push(field.name);
+          }
+        });
+
+        if (requiredFields.length) {
+          required({
+            fields: requiredFields,
+            req,
+          });
+        }
+      }
 
       let params: any = {};
       const data: any = {};

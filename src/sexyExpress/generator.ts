@@ -5,9 +5,10 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 import JSONTOYAML from "json-to-pretty-yaml";
 
-import store from "./store";
+import store, { Field, getRoutes } from "./store";
 import { Config } from "./index";
 import { me } from "../controllers/user";
+import { isFieldRequired } from "../utils/requiredFields";
 
 export async function generateDocs() {
   let jsonOpenApiPath = "";
@@ -27,7 +28,7 @@ export async function generateDocs() {
 
     await fs.ensureDir(tmpPath);
 
-    const routes = store.get("routes") as { path: string; method: string }[];
+    const routes = getRoutes();
 
     for (const route of routes) {
       // TODO add support for params and body
@@ -114,19 +115,9 @@ export async function generateDocs() {
 
         // @ts-ignore
         openApiDoc.paths[pathToUse][route.method.toLowerCase()] = {
-          summary: "",
-          parameters: params.map((param) => {
-            return {
-              name: param,
-              in: "path",
-              required: true,
-              description: "",
-              schema: {
-                type: "string",
-              },
-            };
-          }),
-          description: "",
+          summary: route.summary,
+          parameters: generateParameters(params, route.fields),
+          description: route.description,
           responses: {
             "200": {
               description: "",
@@ -166,7 +157,7 @@ export async function generateDocs() {
 function _initOpenApiDoc() {
   const config = store.get("config") as Config;
 
-  const file = {
+  const file: any = {
     openapi: "3.0.0",
     info: {
       version: config.doc?.version ?? "",
@@ -174,16 +165,14 @@ function _initOpenApiDoc() {
       description: config.doc?.description ?? "",
     },
     paths: {},
-    servers: [
-      {
-        url: "http://localhost:8000",
-        description: "URL",
-      },
-    ],
     components: {
       schemas: {},
     },
   };
+  if (config.doc && config.doc.servers) {
+    file["servers"] = config.doc.servers;
+  }
+
   return file;
 }
 
@@ -193,4 +182,61 @@ async function generateYamlFromOpenApiJson(jsonFilePath: string) {
   const yamlFile = "docs/opanApiDoc.yaml";
   await fs.outputFile(yamlFile, yamlData);
   return yamlFile;
+}
+
+function generateParameters(params: string[] = [], fields: Field[] = []) {
+  const parameters: {
+    name: string;
+    in: "path" | "query";
+    required: boolean;
+    description: string;
+    schema: {
+      type: string;
+      enum?: string[];
+    };
+  }[] = [];
+
+  params.forEach((param) => {
+    parameters.push({
+      name: param,
+      in: "path",
+      required: true,
+      description: "",
+      schema: {
+        type: "string",
+      },
+    });
+  });
+
+  fields.forEach((param) => {
+    const parameter = {
+      name: typeof param === "string" ? param.replace("!", "") : param.name,
+      in: "query",
+      required:
+        typeof param === "string" ? isFieldRequired(param) : !param.optional,
+      description: typeof param === "string" ? "" : param.description || "",
+      schema: {
+        type:
+          typeof param === "string"
+            ? "string"
+            : _getOpenApiType(param.type) || "string",
+      },
+    };
+
+    if (typeof param === "object" && param.enum) {
+      // @ts-ignore
+      parameter.schema["enum"] = param.enum;
+    }
+
+    // @ts-ignore
+    parameters.push(parameter);
+  });
+  return parameters;
+}
+
+function _getOpenApiType(type: string) {
+  if (type === "number") {
+    return "integer";
+  }
+  return type;
 }
