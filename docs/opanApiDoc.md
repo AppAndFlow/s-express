@@ -1,5 +1,5 @@
-# 
-
+# saluttttt
+testt description
 
 ## Version: 
 
@@ -109,7 +109,30 @@ Cette route ne vaut pas dla marde.
 | params1 | path |  | Yes | string |
 | params2 | path |  | Yes | string |
 | trainerId | query |  | No | string |
-| trainerAge! | query |  | Yes | string |
+| trainerAge | query |  | Yes | string |
+| yolofield | query |  | No | string |
+
+##### Responses
+
+| Code | Description |
+| ---- | ----------- |
+| 200 |  |
+
+### /lolllll
+
+#### GET
+##### Summary:
+
+
+
+##### Description:
+
+
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
 
 ##### Responses
 
@@ -158,7 +181,10 @@ Cette route ne vaut pas dla marde.
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| id | string |  | Yes |
-| id2 | string |  | Yes |
-| ide3 | string |  | Yes |
-| picture | string |  | Yes |
+| error | string |  | Yes |
+
+#### GetLolllllResponse
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| promeeeeseee | string |  | Yes |

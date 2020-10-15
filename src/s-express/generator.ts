@@ -1,13 +1,11 @@
 import fetch from "node-fetch";
 import { command } from "execa";
-import path from "path";
 import fs from "fs-extra";
 import yaml from "js-yaml";
 import JSONTOYAML from "json-to-pretty-yaml";
 
-import store, { Field, getRoutes } from "./store";
+import store, { Field, getConfig, getRoutes } from "./store";
 import { Config } from "./index";
-import { me } from "../controllers/user";
 import { isFieldRequired } from "../utils/requiredFields";
 
 export async function generateDocs() {
@@ -26,6 +24,8 @@ export async function generateDocs() {
 
     const openApiDoc = _initOpenApiDoc();
 
+    const config = getConfig();
+
     await fs.ensureDir(tmpPath);
 
     const routes = getRoutes();
@@ -34,6 +34,7 @@ export async function generateDocs() {
       // TODO add support for params and body
       const res = await fetch(`http://localhost:8000${route.path}`, {
         method: route.method,
+        headers: config.doc && config.doc.headers ? config.doc.headers : [],
         body: ["PUT", "POST"].includes(route.method)
           ? JSON.stringify({})
           : undefined,
@@ -213,7 +214,11 @@ function generateParameters(params: string[] = [], fields: Field[] = []) {
       name: typeof param === "string" ? param.replace("!", "") : param.name,
       in: "query",
       required:
-        typeof param === "string" ? isFieldRequired(param) : !param.optional,
+        typeof param === "string"
+          ? isFieldRequired(param)
+          : typeof param.optional === "boolean"
+          ? param.optional
+          : false,
       description: typeof param === "string" ? "" : param.description || "",
       schema: {
         type:
@@ -234,7 +239,11 @@ function generateParameters(params: string[] = [], fields: Field[] = []) {
   return parameters;
 }
 
-function _getOpenApiType(type: string) {
+function _getOpenApiType(type?: string) {
+  if (!type) {
+    return "string";
+  }
+
   if (type === "number") {
     return "integer";
   }

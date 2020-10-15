@@ -1,4 +1,5 @@
 import express, {
+  Application,
   Express,
   NextFunction,
   Request,
@@ -34,7 +35,14 @@ export interface Config {
     title?: string;
     description?: string;
     servers?: DocServer[];
+    headers?: any[];
   };
+  morgan?: {
+    format: string;
+    options?: morgan.Options;
+  };
+  // list of app.use stuff that you want when the app boot
+  uses?: any[];
 }
 
 interface DocServer {
@@ -42,17 +50,30 @@ interface DocServer {
   description: string;
 }
 
-function init(config: Config | undefined = { useCors: true }): Express {
+export function createServer(
+  config: Config | undefined = { useCors: true },
+): Express {
   require("express-async-errors");
   dotenv.config(config.dotenvConfig);
   const expressApp = express();
+
+  if (config.uses) {
+    config.uses.forEach((use) => {
+      expressApp.use(use);
+    });
+  }
 
   store.set("expressApp", expressApp);
   store.set("config", config);
   updateRouteStore([]);
 
   expressApp.use(express.json());
-  expressApp.use(morgan("short"));
+
+  if (config.morgan) {
+    expressApp.use(morgan(config.morgan.format, config.morgan.options));
+  } else {
+    expressApp.use(morgan("short"));
+  }
 
   if (config.useCors) {
     expressApp.use(cors());
@@ -77,8 +98,6 @@ function init(config: Config | undefined = { useCors: true }): Express {
 
   return expressApp;
 }
-
-export default init;
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -186,12 +205,7 @@ export function addRoute<Data = unknown, Params = unknown>(
 
       let result: Record<string, any> = { error: null };
 
-      // might be hacky, maybe there's a better way
-      if (cb.constructor.name == "AsyncFunction") {
-        result = await cb({ req, res, data, params });
-      } else {
-        result = cb({ req, res, data, params });
-      }
+      result = await cb({ req, res, data, params });
 
       if (!result) {
         result = { error: null };

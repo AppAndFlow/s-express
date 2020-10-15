@@ -1,8 +1,8 @@
 openapi: "3.0.0"
 info:
   version: ""
-  title: ""
-  description: ""
+  title: "saluttttt"
+  description: "testt description"
 paths:
   /:
     get:
@@ -85,12 +85,21 @@ paths:
           description: ""
           schema:
             type: "string"
-        - name: "trainerAge!"
+        - name: "trainerAge"
           in: "query"
           required: true
           description: ""
           schema:
             type: "string"
+        - name: "yolofield"
+          in: "query"
+          required: false
+          description: ""
+          schema:
+            type: "string"
+            enum:
+              - "enume1"
+              - "enume3"
       description: "Cette route ne vaut pas dla marde."
       responses:
         200:
@@ -99,6 +108,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetMoiParams1KikiParams2Response"
+  /lolllll:
+    get:
+      summary: ""
+      parameters: []
+      description: ""
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetLolllllResponse"
 components:
   schemas:
     GetHomeResponse:
@@ -156,17 +177,16 @@ components:
     GetMoiParams1KikiParams2Response:
       additionalProperties: false
       properties:
-        id:
-          type: "string"
-        id2:
-          type: "string"
-        ide3:
-          type: "string"
-        picture:
+        error:
           type: "string"
       required:
-        - "id"
-        - "picture"
-        - "id2"
-        - "ide3"
+        - "error"
+      type: "object"
+    GetLolllllResponse:
+      additionalProperties: false
+      properties:
+        promeeeeseee:
+          type: "string"
+      required:
+        - "promeeeeseee"
       type: "object"

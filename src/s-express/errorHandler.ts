@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { NextFunction, Response } from 'express';
+import { NextFunction, Response } from "express";
 
-import { SystemError } from './error';
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from './restCodes';
+import { SystemError } from "./error";
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "./restCodes";
 
 export default function errorHandler(
   err: SystemError,
@@ -14,15 +14,13 @@ export default function errorHandler(
   let data = err.data;
   let restCode = err.restCode;
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     data = undefined;
     error = err.prodMessage || error;
 
     if (err instanceof SystemError !== true) {
       // prevent error leaking in prod.
-
-      // TODO add support for multiple language?
-      error = 'INTERNAL SERVER ERROR';
+      error = "INTERNAL SERVER ERROR";
       restCode = INTERNAL_SERVER_ERROR;
     }
   }
