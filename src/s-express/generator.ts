@@ -5,7 +5,7 @@ import yaml from "js-yaml";
 import JSONTOYAML from "json-to-pretty-yaml";
 
 import store, { Field, getConfig, getRoutes } from "./store";
-import { Config } from "./index";
+import { Config, DEFAULT_PORT } from "./index";
 import { isFieldRequired } from "../utils/requiredFields";
 
 export async function generateDocs() {
@@ -29,10 +29,12 @@ export async function generateDocs() {
     await fs.ensureDir(tmpPath);
 
     const routes = getRoutes();
+    const port = config.port || DEFAULT_PORT;
 
     for (const route of routes) {
-      // TODO add support for params and body
-      const res = await fetch(`http://localhost:8000${route.path}`, {
+      const tag = _extractTag(route.path);
+
+      const res = await fetch(`http://localhost:${port}${route.path}`, {
         method: route.method,
         headers: config.doc && config.doc.headers ? config.doc.headers : [],
         body: ["PUT", "POST"].includes(route.method)
@@ -132,6 +134,13 @@ export async function generateDocs() {
             },
           },
         };
+
+        if (tag) {
+          Object.assign(
+            openApiDoc.paths[pathToUse][route.method.toLowerCase()],
+            tag,
+          );
+        }
 
         jsonOpenApiPath = `${tmpPath}/openApiDoc.json`;
         await fs.writeJSON(jsonOpenApiPath, openApiDoc);
@@ -248,4 +257,24 @@ function _getOpenApiType(type?: string) {
     return "integer";
   }
   return type;
+}
+
+function _extractTag(route: string) {
+  // will remove the /
+  let currentRoute = route.substring(1);
+
+  if (!currentRoute.length) {
+    return undefined;
+  }
+
+  return {
+    tags: [
+      currentRoute.substring(
+        0,
+        currentRoute.indexOf("/") === -1
+          ? undefined
+          : currentRoute.indexOf("/"),
+      ),
+    ],
+  };
 }

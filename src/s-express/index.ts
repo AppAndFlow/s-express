@@ -1,5 +1,4 @@
 import express, {
-  Application,
   Express,
   NextFunction,
   Request,
@@ -11,15 +10,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import required, { isFieldRequired } from "../utils/requiredFields";
-// import createStore from 'data-store';
-
-// // const store = createStore('store');
-
 import store, { Field, getRoutes, updateRouteStore } from "./store";
 import errorHandler from "./errorHandler";
 import { generateDocs } from "./generator";
 
-const DEFAULT_PORT = 8000;
+export const DEFAULT_PORT = 8000;
 
 export interface Config {
   port?: string | number;
@@ -39,7 +34,7 @@ export interface Config {
   };
   morgan?: {
     format: string;
-    options?: morgan.Options;
+    options?: morgan.Options<any, any>;
   };
   // list of app.use stuff that you want when the app boot
   uses?: any[];
@@ -111,17 +106,19 @@ interface AddRoute {
   description?: string;
 }
 
-export function addRoute<Data = unknown, Params = unknown>(
+export function addRoute<Data = unknown, Params = unknown, Ctx = unknown>(
   cb: ({
     req,
     res,
     data,
     params,
+    ctx,
   }: {
     req: Request;
     res: Response;
     data: Data;
     params: Params;
+    ctx: Ctx;
   }) => Record<string, any>,
   {
     method = "GET",
@@ -192,6 +189,7 @@ export function addRoute<Data = unknown, Params = unknown>(
       }
 
       let params: any = {};
+      let ctx: any = {};
       const data: any = {};
       if (req.params) {
         params = req.params;
@@ -202,10 +200,15 @@ export function addRoute<Data = unknown, Params = unknown>(
       if (req.query) {
         Object.assign(data, req.query);
       }
+      // @ts-ignore
+      if (req.ctx) {
+        // @ts-ignore
+        ctx = req.ctx;
+      }
 
       let result: Record<string, any> = { error: null };
 
-      result = await cb({ req, res, data, params });
+      result = await cb({ req, res, data, params, ctx });
 
       if (!result) {
         result = { error: null };
