@@ -13,8 +13,7 @@ import required, { isFieldRequired } from "../utils/requiredFields";
 import store, { Field, getRoutes, updateRouteStore } from "./store";
 import errorHandler from "./errorHandler";
 import { generateDocs } from "./generator";
-
-export const DEFAULT_PORT = 8000;
+import { DEFAULT_PORT } from "./restCodes";
 
 export interface Config {
   port?: string | number;
@@ -38,6 +37,7 @@ export interface Config {
   };
   // list of app.use stuff that you want when the app boot
   uses?: any[];
+  generateDoc?: boolean;
 }
 
 interface DocServer {

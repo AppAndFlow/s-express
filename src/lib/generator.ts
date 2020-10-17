@@ -5,12 +5,14 @@ import yaml from "js-yaml";
 import JSONTOYAML from "json-to-pretty-yaml";
 
 import store, { Field, getConfig, getRoutes } from "./store";
-import { Config, DEFAULT_PORT } from "./index";
+import { Config } from "./index";
 import { isFieldRequired } from "../utils/requiredFields";
+import { DEFAULT_PORT } from "./restCodes";
 
 export async function generateDocs() {
   let jsonOpenApiPath = "";
-  if (!process.env.DOC_MODE) {
+  let config = getConfig();
+  if (!process.env.DOC_MODE && !config.generateDoc) {
     return;
   }
 
@@ -19,12 +21,12 @@ export async function generateDocs() {
   );
 
   setTimeout(async () => {
+    config = getConfig();
+
     // generate tmp folder
     const tmpPath = `${process.cwd()}/docs`;
 
     const openApiDoc = _initOpenApiDoc();
-
-    const config = getConfig();
 
     await fs.ensureDir(tmpPath);
 
@@ -86,7 +88,7 @@ export async function generateDocs() {
         // TODO use node path
 
         const { stdout } = await command(
-          `ts-to-openapi -f ${typeFile} -t ${typeName}`,
+          `node ${process.cwd()}/node_modules/ts-to-openapi/dist/bin/ts-to-openapi -f ${typeFile} -t ${typeName}`,
         );
 
         let fixed = stdout.replace("/**", "");

@@ -4,8 +4,12 @@
     "name": "Valium",
     "email": "vincent@appandflow.com"
   },
-  "main": "./dist/index.js",
-  "version": "0.0.1",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "version": "0.0.13",
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --ignore /tmp --ext ts --exec 'tsc && node dist/index.js'",

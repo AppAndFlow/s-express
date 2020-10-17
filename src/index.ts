@@ -1,1 +1,3 @@
-export default "./s-express";
+import * as sexpress from "./lib";
+
+export default sexpress;
