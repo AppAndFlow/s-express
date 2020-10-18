@@ -1,4 +1,2 @@
-import { addRoute, createServer, getExpressApp } from "./lib";
-import SexpressError from "./lib/sexpressError";
-
-export default { addRoute, createServer, getExpressApp, SexpressError };
+export { addRoute, createServer, getExpressApp } from "./lib";
+export * from "./lib/sexpressError";
