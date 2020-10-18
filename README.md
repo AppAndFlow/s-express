@@ -7,6 +7,7 @@
 
 - **Generates OpenApi documentation at runtime in .yaml, .json and .md**
 - **Handles async errors globally out of the box**
+- **Dead simple API and almost no config required**
 - **Provides a simple wrapper around Error**
 - **Fully backward compatible with exppres.js**
 - **Enforce json response aka contentType: application/json**
