@@ -9,7 +9,7 @@
   "files": [
     "dist"
   ],
-  "version": "0.0.16",
+  "version": "0.0.21",
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --ignore /tmp --ext ts --exec 'tsc && node dist/index.js'",
