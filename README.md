@@ -6,11 +6,12 @@
 ## Features
 
 - **Generates OpenApi documentation at runtime in .yaml, .json and .md**
-- **Handles async error globally out of the box**
+- **Handles async errors globally out of the box**
 - **Provides a simple wrapper around Error**
 - **Fully backward compatible with exppres.js**
-- **Enforce json response akaa contentType: application/json**
-  It's basically express.js with a bit more suggar and opiniated stuff.
+- **Enforce json response aka contentType: application/json**
+
+It's basically express.js with a bit more suggar and opinionated stuff.
 
 ### APIs
 

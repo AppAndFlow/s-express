@@ -1,7 +1,7 @@
 {
   "name": "s-express",
   "author": {
-    "name": "Valium",
+    "name": "Vincent de Lafontaine",
     "email": "vincent@appandflow.com"
   },
   "main": "dist/index.js",
