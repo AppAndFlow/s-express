@@ -1,0 +1,126 @@
+openapi: "3.0.0"
+info:
+  version: ""
+  title: ""
+  description: ""
+paths:
+  /user:
+    get:
+      summary: ""
+      parameters:
+        - name: "id"
+          in: "query"
+          required: true
+          description: ""
+          schema:
+            type: "string"
+      description: ""
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUserResponse"
+      tags:
+        - "user"
+  /users:
+    get:
+      summary: ""
+      parameters:
+        - name: "limit"
+          in: "query"
+          required: false
+          description: ""
+          schema:
+            type: "string"
+      description: ""
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUsersResponse"
+      tags:
+        - "users"
+  /me:
+    get:
+      summary: ""
+      parameters: []
+      description: ""
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMeResponse"
+      tags:
+        - "me"
+    put:
+      summary: ""
+      parameters:
+        - name: "name"
+          in: "query"
+          required: false
+          description: ""
+          schema:
+            type: "string"
+      description: ""
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PutMeResponse"
+      tags:
+        - "me"
+components:
+  schemas:
+    GetUserResponse:
+      additionalProperties: false
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - "user"
+      type: "object"
+    User:
+      additionalProperties: false
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+      required:
+        - "name"
+        - "id"
+      type: "object"
+    GetUsersResponse:
+      additionalProperties: false
+      properties:
+        users:
+          items:
+            $ref: "#/components/schemas/User"
+          type: "array"
+      required:
+        - "users"
+      type: "object"
+    GetMeResponse:
+      additionalProperties: false
+      properties:
+        name:
+          type: "string"
+      required:
+        - "name"
+      type: "object"
+    PutMeResponse:
+      additionalProperties: false
+      properties:
+        name:
+          type: "string"
+      required:
+        - "name"
+      type: "object"

@@ -136,7 +136,8 @@ You have to set the env variable `DOC_MODE` to `true`.
 The app will then start in doc mode and every declared endpoint
 throughout the app will be hit by a request and capturing it returned value(s)
 
-Documentation will be generated under `/docs`
+Documentation will be generated under `/docs`.
+You can see an example <a href="https://github.com/AppAndFlow/s-express/blob/master/openApiDocExample">Here</a>
 
 I suggest adding this your scripts in your package.json
 
