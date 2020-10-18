@@ -149,3 +149,11 @@ i.e: `openApiDoc: "rm -rf docs && tsc && DOC_MODE=true node dist/index.js"`
 - **Add support for authenticated api calls when generating OpenApi Doc**
 
 ## This is an experimental package. Use at your own risk.
+
+## Thanks
+
+- Thanks to <a href="https://github.com/alexcrist/json-to-pretty-yaml">json-to-pretty-yaml<a/>
+
+- Thanks to <a href="https://github.com/theBenForce/openapi-markdown">openapi-markdown<a/>
+
+- And of course to any other open source libs used by my package.
