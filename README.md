@@ -13,7 +13,7 @@
 
 It's basically express.js with a bit more suggar and opinionated stuff.
 
-### APIs
+### API
 
 **Creating a server (minimal example)**
 
