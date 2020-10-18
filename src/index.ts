@@ -1,3 +1,4 @@
-import * as sexpress from "./lib";
+import { addRoute, createServer, getExpressApp } from "./lib";
+import SexpressError from "./lib/sexpressError";
 
-export default sexpress;
+export default { addRoute, createServer, getExpressApp, SexpressError };

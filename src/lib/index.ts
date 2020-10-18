@@ -1,49 +1,14 @@
-import express, {
-  Express,
-  NextFunction,
-  Request,
-  RequestHandler,
-  Response,
-} from "express";
+import express, { Express, NextFunction, Request, Response } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
 
 import required, { isFieldRequired } from "../utils/requiredFields";
-import store, { Field, getRoutes, updateRouteStore } from "./store";
+import store, { getRoutes, updateRouteStore } from "./store";
 import errorHandler from "./errorHandler";
 import { generateDocs } from "./generator";
 import { DEFAULT_PORT } from "./restCodes";
-
-export interface Config {
-  port?: string | number;
-  useCors?: boolean;
-  readyMessage?: string;
-  dotenvConfig?: dotenv.DotenvConfigOptions;
-  auth?: {
-    authMiddleware: RequestHandler;
-    secureAllRoutes?: boolean;
-  };
-  doc?: {
-    version?: string;
-    title?: string;
-    description?: string;
-    servers?: DocServer[];
-    headers?: any[];
-  };
-  morgan?: {
-    format: string;
-    options?: morgan.Options<any, any>;
-  };
-  // list of app.use stuff that you want when the app boot
-  uses?: any[];
-  generateDoc?: boolean;
-}
-
-interface DocServer {
-  url: string;
-  description: string;
-}
+import { AddRoute, Config, HttpMethod } from "./types";
 
 export function createServer(
   config: Config | undefined = { useCors: true },
@@ -92,18 +57,6 @@ export function createServer(
   generateDocs();
 
   return expressApp;
-}
-
-export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-
-interface AddRoute {
-  method?: HttpMethod;
-  path?: string;
-  middlewares?: RequestHandler[];
-  secure?: boolean;
-  fields?: Field[];
-  summary?: string;
-  description?: string;
 }
 
 export function addRoute<Data = unknown, Params = unknown, Ctx = unknown>(
@@ -241,6 +194,8 @@ function _getExpressMethodFn(method: HttpMethod) {
       return expressApp.put.bind(expressApp);
     case "PATCH":
       return expressApp.patch.bind(expressApp);
+    default:
+      return expressApp.get.bind(expressApp);
   }
 }
 

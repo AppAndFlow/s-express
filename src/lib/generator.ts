@@ -4,8 +4,8 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 import JSONTOYAML from "json-to-pretty-yaml";
 
-import store, { Field, getConfig, getRoutes } from "./store";
-import { Config } from "./index";
+import store, { getConfig, getRoutes } from "./store";
+import { Config, Field } from "./types/index";
 import { isFieldRequired } from "../utils/requiredFields";
 import { DEFAULT_PORT } from "./restCodes";
 
@@ -52,7 +52,7 @@ export async function generateDocs() {
       } else {
         formatedTypeName = route.path
           .split("/")
-          .map((word) => {
+          .map((word: string) => {
             word.length ? word[0].toUpperCase() + word.substring(1) : "";
 
             if (word.length) {

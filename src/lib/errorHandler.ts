@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Response } from "express";
 
-import { SystemError } from "./error";
+import SexpressError from "./sexpressError";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "./restCodes";
 
 export default function errorHandler(
-  err: SystemError,
+  err: SexpressError,
   _: any,
   res: Response,
   __: NextFunction,
@@ -18,7 +18,7 @@ export default function errorHandler(
     data = undefined;
     error = err.prodMessage || error;
 
-    if (err instanceof SystemError !== true) {
+    if (err instanceof SexpressError !== true) {
       // prevent error leaking in prod.
       error = "INTERNAL SERVER ERROR";
       restCode = INTERNAL_SERVER_ERROR;

@@ -1,9 +1,9 @@
-import { RestCodeEnum } from './restCodes';
+import { RestCodeEnum } from "./restCodes";
 
 /*
   Simple Wrapper arround node.js Errors
 */
-export class SystemError extends Error {
+class SexpressError extends Error {
   restCode?: RestCodeEnum;
   prodMessage?: string;
   data: any;
@@ -24,3 +24,5 @@ export class SystemError extends Error {
     this.data = data;
   }
 }
+
+export default SexpressError;
