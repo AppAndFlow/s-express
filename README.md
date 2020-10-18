@@ -138,7 +138,7 @@ throughout the app will be hit by a request and capturing it returned value(s)
 
 Documentation will be generated under `/docs`
 
-I suggest adding this to a script in your package.json
+I suggest adding this your scripts in your package.json
 
 i.e: `openApiDoc: "rm -rf docs && tsc && DOC_MODE=true node dist/index.js"`
 
