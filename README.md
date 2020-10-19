@@ -24,7 +24,7 @@ but I wanted something with almost no config and a super simple API not far from
 You might wanna do this in your index.ts
 
 ```TS
-import { createServer } from 's-express'
+import { createServer } from '@appandflow/s-express'
 const IamAnExpressAppBasically = createServer()
 ```
 
@@ -76,7 +76,7 @@ You can do this everywhere and the way you wish
 but I'll suggest using a classic controller pattern.
 
 ```TS
-import { addRoute } from 's-express'
+import { addRoute } from '@appandflow/s-express'
 
 // First you got your callback à la express.js
 // but we slightly modificated signature
@@ -124,7 +124,7 @@ export interface AddRouteConfig {
 todo.
 
 ```TS
-import { SexpressError } from 's-express'
+import { SexpressError } from '@appandflow/s-express'
 throw new SexpressError({
     message: "Dev error msg, this will be remove when env === production if you specify a prodMessage,",
     restCode: 422,

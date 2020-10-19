@@ -1,4 +1,4 @@
-import { createServer, addRoute } from "s-express";
+import { createServer, addRoute } from "@appandflow/s-express";
 
 createServer();
 
