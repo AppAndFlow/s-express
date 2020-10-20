@@ -14,7 +14,7 @@
 - **Fully backward compatible with exppres.js**
 - **Enforce json response aka contentType: application/json**
 
-It's basically express.js with a bit more suggar and opinionated stuff. I just wanted
+It's basically express.js with a bit more sugar and opinionated stuff. I just wanted
 something that would automatically generate openApi documentation based on my app
 endpoints. I know there's a lot of solutions out there for that,
 but I wanted something with almost no config and a super simple API not far from express. Hence why I made this little package.
