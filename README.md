@@ -3,7 +3,7 @@
 <img src="https://cdn.discordapp.com/attachments/688484592348561446/766241998868709406/unknown.png"
 />
 
-[![npm (scoped)](https://img.shields.io/npm/v/quick-picker.svg)](https://www.npmjs.com/package/@appandflow/s-express)
+[![npm (scoped)](https://img.shields.io/npm/v/@appandflow/s-express.svg)](https://www.npmjs.com/package/@appandflow/s-express)
 
 ## Features
 
