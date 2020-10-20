@@ -3,6 +3,8 @@
 <img src="https://cdn.discordapp.com/attachments/688484592348561446/766241998868709406/unknown.png"
 />
 
+[![npm (scoped)](https://img.shields.io/npm/v/quick-picker.svg)](https://www.npmjs.com/package/@appandflow/s-express)
+
 ## Features
 
 - **Generates OpenApi documentation at runtime in .yaml, .json and .md**
@@ -16,6 +18,12 @@ It's basically express.js with a bit more suggar and opinionated stuff. I just w
 something that would automatically generate openApi documentation based on my app
 endpoints. I know there's a lot of solutions out there for that,
 but I wanted something with almost no config and a super simple API not far from express. Hence why I made this little package.
+
+### Installation
+
+```
+  npm i @appandflow/s-express
+```
 
 ### API
 
