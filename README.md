@@ -31,9 +31,17 @@ but I wanted something with almost no config and a super simple API not far from
 
 You might wanna do this in your index.ts
 
+`index.ts`
+
 ```TS
 import { createServer } from '@appandflow/s-express'
 const IamAnExpressAppBasically = createServer()
+
+
+// Don't forget to require the files where you
+// used "addRoute"
+require('./controller');
+
 ```
 
 The returned value is basically an Express app.
@@ -82,6 +90,8 @@ interface DocServer {
 
 You can do this everywhere and the way you wish
 but I'll suggest using a classic controller pattern.
+
+`controller.ts`
 
 ```TS
 import { addRoute } from '@appandflow/s-express'
