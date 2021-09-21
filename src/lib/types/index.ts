@@ -37,6 +37,7 @@ export interface Config {
   // list of app.use stuff that you want when the app boot
   uses?: any[];
   generateDoc?: boolean;
+  controllersPath?: string;
 }
 
 export interface DocServer {

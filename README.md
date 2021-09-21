@@ -76,6 +76,8 @@ interface Config {
   };
   // list of app.use stuff that you want when the app boot
   uses?: any[];
+  
+  controllersPath?: string; // this is the URI to access your controllers folder i.e: "./controllers". If you don't provide this, you'll need to require those files/folder by yourself. 
 }
 
 // the server object you wish to expose in your openApi doc.

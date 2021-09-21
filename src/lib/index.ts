@@ -2,6 +2,7 @@ import express, { Express, NextFunction, Request, Response } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
+import requireDir from 'require-dir';
 
 import required, { isFieldRequired } from "../utils/requiredFields";
 import store, { getRoutes, updateRouteStore } from "./store";
@@ -21,6 +22,10 @@ export function createServer(
     config.uses.forEach((use) => {
       expressApp.use(use);
     });
+  }
+
+  if (config.controllersPath) {
+    requireDir(config.controllersPath);
   }
 
   store.set("expressApp", expressApp);
