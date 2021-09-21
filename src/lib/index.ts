@@ -25,7 +25,7 @@ export function createServer(
   }
 
   if (config.controllersPath) {
-    requireDir(config.controllersPath);
+    requireDir(`${process.cwd()}/${config.controllersPath}`);
   }
 
   store.set("expressApp", expressApp);
