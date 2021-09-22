@@ -24,9 +24,7 @@ export function createServer(
     });
   }
 
-  if (config.controllersPath) {
-    requireDir(`${process.cwd()}/${config.controllersPath}`);
-  }
+
 
   store.set("expressApp", expressApp);
   store.set("config", config);
@@ -57,6 +55,9 @@ export function createServer(
   // The error handler needs to be declared last.
   setTimeout(() => {
     expressApp.use(errorHandler);
+    if (config.controllersPath) {
+      requireDir(`${process.cwd()}/${config.controllersPath}`);
+    }
   }, 100);
 
   generateDocs();
