@@ -52,12 +52,14 @@ export function createServer(
     );
   });
 
-  // The error handler needs to be declared last.
+  
   setTimeout(() => {
-    expressApp.use(errorHandler);
+ 
     if (config.controllersPath) {
       requireDir(`${process.cwd()}/${config.controllersPath}`);
     }
+    // The error handler needs to be declared last.
+    expressApp.use(errorHandler);
   }, 100);
 
   generateDocs();
