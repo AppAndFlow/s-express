@@ -2,7 +2,7 @@ import express, { Express, NextFunction, Request, Response } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
-import requireDir from 'require-dir';
+import requireDir from "require-dir";
 
 import required, { isFieldRequired } from "../utils/requiredFields";
 import store, { getRoutes, updateRouteStore } from "./store";
@@ -12,7 +12,7 @@ import { DEFAULT_PORT } from "./restCodes";
 import { AddRoute, Config, HttpMethod } from "./types";
 
 export function createServer(
-  config: Config | undefined = { useCors: true },
+  config: Config | undefined = { useCors: true }
 ): Express {
   require("express-async-errors");
   dotenv.config(config.dotenvConfig);
@@ -23,8 +23,6 @@ export function createServer(
       expressApp.use(use);
     });
   }
-
-
 
   store.set("expressApp", expressApp);
   store.set("config", config);
@@ -42,19 +40,19 @@ export function createServer(
     expressApp.use(cors());
   }
 
-  expressApp.set("port", config?.port || process.env.PORT || DEFAULT_PORT);
+  if (!config.disableListening) {
+    expressApp.set("port", config?.port || process.env.PORT || DEFAULT_PORT);
 
-  expressApp.listen(expressApp.get("port"), () => {
-    console.log(
-      config.readyMessage
-        ? config.readyMessage
-        : `Ready on http://localhost:${expressApp.get("port")}`,
-    );
-  });
+    expressApp.listen(expressApp.get("port"), () => {
+      console.log(
+        config.readyMessage
+          ? config.readyMessage
+          : `Ready on http://localhost:${expressApp.get("port")}`
+      );
+    });
+  }
 
-  
   setTimeout(() => {
- 
     if (config.controllersPath) {
       requireDir(`${process.cwd()}/${config.controllersPath}`);
     }
@@ -93,7 +91,7 @@ export function addRoute<Data = unknown, Params = unknown, Ctx = unknown>(
     method: "GET",
     path: "/",
     middlewares: [],
-  },
+  }
 ) {
   const expressFn = _getExpressMethodFn(method);
   const config = store.get("config") as Config;
@@ -119,7 +117,7 @@ export function addRoute<Data = unknown, Params = unknown, Ctx = unknown>(
     (!config.auth || (config.auth && !config.auth.authMiddleware))
   ) {
     throw new Error(
-      `Cannot use config.secure on route ${path} as authMiddleware is undefined.`,
+      `Cannot use config.secure on route ${path} as authMiddleware is undefined.`
     );
   } else if (typeof secure === "boolean" && !secure) {
     authMiddleware = _placeholder;
@@ -177,7 +175,7 @@ export function addRoute<Data = unknown, Params = unknown, Ctx = unknown>(
 
       // TODO add support to support other rest code then 200 for instance
       res.json(result);
-    },
+    }
   );
 }
 

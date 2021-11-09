@@ -16,6 +16,7 @@ export interface AddRoute {
 
 export interface Config {
   port?: string | number;
+  disableListening?: boolean;
   useCors?: boolean;
   readyMessage?: string;
   dotenvConfig?: dotenv.DotenvConfigOptions;
