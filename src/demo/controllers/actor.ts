@@ -27,7 +27,3 @@ addRoute<{ salute: string; ohoh: number }, void, Ctx>(
 addRoute<any, void, Ctx>(async ({ data, ctx }) => {
   return testServices.getSimpleActor({ ...data, userId: ctx.user! });
 });
-
-addRoute<any, void, Ctx>(async ({ data, ctx }) => {
-  return testServices.getSimpleActor({ ...data, userId: ctx.user! });
-});
