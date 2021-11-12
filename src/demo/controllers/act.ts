@@ -26,7 +26,7 @@ addRoute<MM, void, Ctx>(
   }
 );
 
-addRoute<any, void, Ctx>(
+addRoute<{ a: number; b: { c: string } }, void, Ctx>(
   async ({ data, ctx }) => {
     return deleteMe({ ...data, userId: ctx.user! });
   },

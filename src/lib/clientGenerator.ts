@@ -325,7 +325,7 @@ function findReturnedValue(str: string) {
             if (str[i] === ",") {
               payloadType = payloadType.substring(0, payloadType.length - 1);
             }
-            // we wont support nested generic type for now i.e: A<B<c>>
+            // we wont support nested generic type for now i.e: A<B<c>> // TODO add support for partial.
             break;
           }
         }
