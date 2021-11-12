@@ -1,3 +1,5 @@
+import { MM } from "./tesa";
+
 interface MonType {
   hoho: string;
 }
@@ -16,5 +18,12 @@ export async function editActor(a: any) {
 }
 
 export async function getSimpleActor(a: any) {
-  return { taco: 1.55 };
+  const b: MM = {
+    a: {
+      ho: "da",
+    },
+    hihi: "d",
+    nono: 4,
+  };
+  return b;
 }

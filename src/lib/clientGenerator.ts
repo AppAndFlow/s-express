@@ -3,6 +3,9 @@ import klaw from "klaw";
 import { getConfig } from "./store";
 
 export async function generateClient() {
+  // TODO we must run tsconfig.js with     "declaration": true,
+  // this will generate .d.ts
+
   setTimeout(async () => {
     const config = getConfig();
     const controllerPath = `${process.cwd()}/${config.controllersPath}`.replace(
@@ -12,6 +15,8 @@ export async function generateClient() {
     const paths = await getFilesForDir(controllerPath);
     const validPaths = paths.filter((path) => path.includes(".ts"));
     let fnString = "";
+    let interfaceList: string[] = [];
+    let interfaceString = "";
     for (const path of validPaths) {
       const file = await fs.readFile(path, "utf8");
       const routeDeclarations = await findAllAddRouteOccurences(path);
@@ -22,13 +27,69 @@ export async function generateClient() {
       await findFunctionsData(routeDatas);
 
       fnString += await composeClientFunctions(routeDatas);
+
+      let interfaces = composeInterfacesList(routeDatas);
+      interfaceList = [...interfaceList, ...interfaces];
+
+      console.log(routeDatas);
     }
 
-    await composeClientClass(fnString);
+    const test = await extractSpecificTypeFromFile(
+      `${process.cwd()}/dist/lib/types/index.d.ts`,
+      "Config"
+    );
+    console.log(test);
+
+    // Hardcoded types location for now;
+    // await composeClientInterfaces({locations: [`${process.cwd()}/dist/}`]});
+
+    await composeClientClass({ fnString });
   }, 1000);
 }
 
-async function composeClientClass(fnString: string) {
+async function extractSpecificTypeFromFile(filePath: string, typeName: string) {
+  let finalStr = "";
+  const fileString = await fs.readFile(filePath, "utf8");
+  const typeStartIndex = fileString.indexOf(typeName);
+  if (typeStartIndex === -1) {
+    return finalStr;
+  }
+  let level = 0;
+  let gotCore = false;
+  for (let i = typeStartIndex; i < fileString.length; i++) {
+    finalStr += fileString[i];
+    if (fileString[i] === "{") {
+      if (gotCore) {
+        level += 1;
+      } else {
+        gotCore = true;
+      }
+    }
+    if (fileString[i] === "}") {
+      if (level === 0) {
+        break;
+      } else {
+        level -= 1;
+      }
+    }
+  }
+  if (finalStr.length) {
+    return "interface " + finalStr;
+  }
+  return finalStr;
+}
+
+function composeInterfacesList(routeDatas: RouteData[]) {
+  let interfaces: string[] = [];
+  routeDatas.forEach((route) => {
+    if (route.returnedType.includes("Promise<")) {
+      // TODO get the interface name from promise.
+    }
+  });
+  return interfaces;
+}
+
+async function composeClientClass({ fnString }: { fnString: string }) {
   let classTemplate = await fs.readFile(
     `${process.cwd()}/src/lib/clientClassTemplate.txt`,
     "utf8"
