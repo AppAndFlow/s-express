@@ -30,21 +30,69 @@ export async function generateClient() {
 
       let interfaces = composeInterfacesList(routeDatas);
       interfaceList = [...interfaceList, ...interfaces];
-
-      console.log(routeDatas);
     }
 
-    const test = await extractSpecificTypeFromFile(
-      `${process.cwd()}/dist/lib/types/index.d.ts`,
-      "Config"
-    );
-    console.log(test);
+    interfaceList = [...new Set(interfaceList)];
 
-    // Hardcoded types location for now;
-    // await composeClientInterfaces({locations: [`${process.cwd()}/dist/}`]});
+    interfaceString = await extractNeededTypesFromProject({ interfaceList });
 
-    await composeClientClass({ fnString });
+    await composeClientClass({ fnString, interfaceString });
   }, 1000);
+}
+
+async function extractNeededTypesFromProject({
+  interfaceList,
+}: {
+  interfaceList: string[];
+}) {
+  let interfaceString = "";
+  const interfaceStringList: string[] = [];
+  // Find type location
+  const projectPaths = await getFilesForDir(`${process.cwd()}`);
+  const projectValidPaths = projectPaths.filter((path) =>
+    path.includes("d.ts")
+  );
+  for (const path of projectValidPaths) {
+    const file = await fs.readFile(path, "utf8");
+
+    for (const type of interfaceList) {
+      const includeType = file.includes(`interface ${type}`);
+      if (includeType) {
+        const typeString = await extractSpecificTypeFromFile(path, type);
+        if (!interfaceStringList.includes(typeString)) {
+          interfaceStringList.push(typeString);
+        }
+      }
+    }
+  }
+
+  // TODO find nested Types.
+
+  interfaceStringList.forEach((intstr) => {
+    interfaceString += intstr + "\n";
+  });
+
+  return interfaceString;
+}
+
+function getNestedTypesFromTypeString(type: string) {
+  const nestedTypeName: string[] = [];
+  let level = 0;
+  let startIndex = type.indexOf("{");
+  for (let i = startIndex; i < type.length; i++) {
+    if (type[i] === "{") {
+      level++;
+    }
+    if (type[i] === "}") {
+      if (level === 0) {
+        break; // end of type
+      } else {
+        level--;
+      }
+    }
+  }
+
+  return nestedTypeName;
 }
 
 async function extractSpecificTypeFromFile(filePath: string, typeName: string) {
@@ -83,18 +131,42 @@ function composeInterfacesList(routeDatas: RouteData[]) {
   let interfaces: string[] = [];
   routeDatas.forEach((route) => {
     if (route.returnedType.includes("Promise<")) {
-      // TODO get the interface name from promise.
+      const returnedType = route.returnedType;
+      const startIndex = returnedType.indexOf("Promise<") + 8;
+      let interfaceName = "";
+      for (let i = startIndex; i < returnedType.length; i++) {
+        if (returnedType[i] === "{") {
+          break; // it's an inline type
+        }
+        if (returnedType[i] === ">") {
+          break; // it's the end
+        }
+        interfaceName += returnedType[i];
+      }
+      if (interfaceName.length) {
+        interfaces.push(interfaceName);
+      }
     }
   });
+
+  interfaces = [...new Set(interfaces)];
+
   return interfaces;
 }
 
-async function composeClientClass({ fnString }: { fnString: string }) {
+async function composeClientClass({
+  fnString,
+  interfaceString,
+}: {
+  fnString: string;
+  interfaceString: string;
+}) {
   let classTemplate = await fs.readFile(
     `${process.cwd()}/src/lib/clientClassTemplate.txt`,
     "utf8"
   );
   classTemplate = classTemplate.replace("FUNCTIONS", fnString);
+  classTemplate = classTemplate.replace("// TYPES_CLIENT", interfaceString);
   await fs.writeFile("./test.txt", classTemplate);
 }
 
@@ -357,6 +429,5 @@ function multiSearchOr(text: string, searchWords: string[]) {
       }
     }
   }
-
   return indexes;
 }
