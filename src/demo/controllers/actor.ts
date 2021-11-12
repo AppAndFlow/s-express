@@ -13,7 +13,7 @@ addRoute<void, void, Ctx>(
   }
 );
 
-addRoute<any, void, Ctx>(
+addRoute<{ salute: string; ohoh: number }, void, Ctx>(
   async ({ data, ctx }) => {
     return testServices.editActor({ ...data, userId: ctx.user! });
   },
@@ -23,6 +23,10 @@ addRoute<any, void, Ctx>(
     fields: ["actId!"],
   }
 );
+
+addRoute<any, void, Ctx>(async ({ data, ctx }) => {
+  return testServices.getSimpleActor({ ...data, userId: ctx.user! });
+});
 
 addRoute<any, void, Ctx>(async ({ data, ctx }) => {
   return testServices.getSimpleActor({ ...data, userId: ctx.user! });

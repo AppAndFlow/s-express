@@ -1,10 +1,11 @@
 import { addRoute } from "../..";
 import * as actServices from "../services/act";
+import { MM } from "../services/tesa";
 import { deleteMe } from "../services/test";
 import { Ctx } from "../types";
 // import { Act } from "../sharedTypes";
 
-addRoute<void, void, Ctx>(
+addRoute<string, void, Ctx>(
   async ({ ctx }) => {
     return actServices.initAct({ userId: ctx.user! });
   },
@@ -14,7 +15,7 @@ addRoute<void, void, Ctx>(
   }
 );
 
-addRoute<any, void, Ctx>(
+addRoute<MM, void, Ctx>(
   async ({ data, ctx }) => {
     return actServices.editMeAct({ ...data, userId: ctx.user! });
   },

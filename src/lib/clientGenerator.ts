@@ -113,6 +113,12 @@ async function composeClientFunctions(routeDatas: RouteData[]) {
     fnText = fnText.replace("HTTP_METHOD", routeData.httpMethod.toLowerCase());
     fnText = fnText.replace("ROUTE_URL", routeData.urlPath);
 
+    if (routeData.payloadType === "void" || !routeData.payloadType) {
+      fnText = fnText.replace("payload: PAYLOAD_TYPE", "");
+    } else {
+      fnText = fnText.replace("PAYLOAD_TYPE", routeData.payloadType);
+    }
+
     let tempName = "";
     let fnName = `${routeData.httpMethod.toLowerCase()}`;
     let nextIsCapital = false;
@@ -200,6 +206,7 @@ interface RouteData {
   urlPath: string;
   httpMethod: string;
   returnedType: string;
+  payloadType: string;
 }
 
 function findReturnedValue(str: string) {
@@ -213,6 +220,7 @@ function findReturnedValue(str: string) {
     urlPath: "/",
     httpMethod: "GET",
     returnedType: "void",
+    payloadType: "void",
   };
   const returnIndex = str.indexOf("return");
 
@@ -281,6 +289,49 @@ function findReturnedValue(str: string) {
             break;
           }
         }
+      }
+    }
+
+    // Now we will figure out the payload type
+    const startIndex = str.indexOf("addRoute<"); // we only support addRoute for now.
+
+    if (startIndex !== -1) {
+      let payloadType = "";
+      let isInline = false;
+      let level = 0;
+      for (let i = startIndex + "addRoute<".length; i < str.length; i++) {
+        if (str[i] === "(") {
+          // instant break it's void type.
+          break;
+        }
+
+        payloadType += str[i];
+        if (str[i] === "{") {
+          if (!isInline) {
+            isInline = true;
+          } else {
+            level += 1;
+          }
+        }
+        if (str[i] === "}" && isInline) {
+          if (level !== 0) {
+            level -= 1;
+          } else {
+            break; // end of inline object
+          }
+        }
+        if (!isInline && str[i] !== "{") {
+          if (str[i] === ">" || str[i] === ",") {
+            if (str[i] === ",") {
+              payloadType = payloadType.substring(0, payloadType.length - 1);
+            }
+            // we wont support nested generic type for now i.e: A<B<c>>
+            break;
+          }
+        }
+      }
+      if (payloadType.length) {
+        res.payloadType = payloadType;
       }
     }
   }
