@@ -10,6 +10,7 @@ import errorHandler from "./errorHandler";
 import { generateDocs } from "./generator";
 import { DEFAULT_PORT } from "./restCodes";
 import { AddRoute, Config, HttpMethod } from "./types";
+import { generateClient } from "./clientGenerator";
 
 export function createServer(
   config: Config | undefined = { useCors: true }
@@ -61,6 +62,7 @@ export function createServer(
   }, 100);
 
   generateDocs();
+  generateClient();
 
   return expressApp;
 }

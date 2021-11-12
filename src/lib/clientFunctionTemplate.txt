@@ -1,0 +1,3 @@
+FUNCTION_NAME = (payload: any): RETURNED_TYPE => {
+    return HTTP_METHOD("ROUTE_URL")
+};

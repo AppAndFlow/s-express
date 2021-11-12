@@ -19,10 +19,13 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "prettier": "prettier --write '**/*'",
     "start": "NODE_ENV=production node dist/index.js",
+    "buildStart": "npm run build && NODE_ENV=production node dist/index.js",
     "gen": "rm -rf docs && tsc && DOC_MODE=true node dist/index.js",
+    "generateClient": "CLIENT_MODE=true node dist/index.js",
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
+    "@types/klaw": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "execa": "^4.0.3",
@@ -53,6 +56,7 @@
     "@typescript-eslint/parser": "^2.15.0",
     "eslint": "^6.8.0",
     "eslint-plugin-import": "^2.19.1",
+    "klaw": "^1.3.1",
     "nodemon": "^2.0.2",
     "prettier": "^1.19.1",
     "typescript": "^4.0.3"
