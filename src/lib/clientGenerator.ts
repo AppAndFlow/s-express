@@ -12,6 +12,7 @@ export async function generateClient() {
 
   setTimeout(async () => {
     const config = getConfig();
+    console.log("Client Generation Started.");
     const controllerPath = `${process.cwd()}/${config.controllersPath}`.replace(
       "dist",
       "src"
@@ -24,19 +25,22 @@ export async function generateClient() {
     for (const path of validPaths) {
       const file = await fs.readFile(path, "utf8");
       const routeDeclarations = await findAllAddRouteOccurences(path);
-
+      console.log(path);
       const routeDatas = routeDeclarations.map((index) =>
         findReturnedValue(file.slice(index))
       );
       await findFunctionsData(routeDatas);
 
       fnString += await composeClientFunctions(routeDatas);
+      console.log(routeDatas);
 
       let interfaces = composeInterfacesList(routeDatas);
       interfaceList = [...interfaceList, ...interfaces];
     }
 
     interfaceList = [...new Set(interfaceList)];
+
+    console.log(interfaceList);
 
     interfaceString = await extractNeededTypesFromProject({ interfaceList });
 
