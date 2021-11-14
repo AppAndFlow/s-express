@@ -211,11 +211,11 @@ async function composeClientClass({
   await fs.ensureDir(destination);
 
   let classTemplate = await fs.readFile(
-    `${process.cwd()}/src/lib/clientClassTemplate.txt`,
+    `${process.cwd()}/node_modules/@appandflow/s-express/dist/lib/clientClassTemplate.txt`,
     "utf8"
   );
   let exportTemplate = await fs.readFile(
-    `${process.cwd()}/src/lib/clientExportTemplate.txt`,
+    `${process.cwd()}/node_modules/@appandflow/s-express/dist/lib/clientExportTemplate.txt`,
     "utf8"
   );
   classTemplate = classTemplate.replace("FUNCTIONS", fnString);
@@ -226,7 +226,7 @@ async function composeClientClass({
 
 async function composeClientFunctions(routeDatas: RouteData[]) {
   const fnTemplate = await fs.readFile(
-    `${process.cwd()}/src/lib/clientFunctionTemplate.txt`,
+    `${process.cwd()}/node_modules/@appandflow/s-express/dist/lib/clientFunctionTemplate.txt`,
     "utf8"
   );
 
