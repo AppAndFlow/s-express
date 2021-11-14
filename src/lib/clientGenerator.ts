@@ -192,7 +192,11 @@ function composeInterfacesList(routeDatas: RouteData[]) {
         }
         interfaceName += returnedType[i];
       }
-      if (interfaceName.length) {
+      if (
+        interfaceName.length &&
+        interfaceName !== "void" &&
+        interfaceName !== "any"
+      ) {
         interfaces.push(interfaceName);
       }
     }
