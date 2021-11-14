@@ -3,6 +3,6 @@ import SexpressError from "./lib/sexpressError";
 
 export { addRoute, createServer, getExpressApp, SexpressError };
 
-createServer({
-  controllersPath: "dist/demo/controllers",
-});
+// createServer({
+//   controllersPath: "dist/demo/controllers",
+// });
