@@ -1,4 +1,4 @@
-import GeneratedClient from './generatedClient';
+import GeneratedClient from './sexpressClass';
 
 
 const sexpressClient = new GeneratedClient();

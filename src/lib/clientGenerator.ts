@@ -42,7 +42,7 @@ export async function generateClient() {
 
     console.log(interfaceList);
 
-    interfaceString = await extractNeededTypesFromProject({ interfaceList });
+    // interfaceString = await extractNeededTypesFromProject({ interfaceList }); ------> TODO: review the whole logic to import types.
 
     await composeClientClass({ fnString, interfaceString });
   }, 1000);
@@ -50,9 +50,12 @@ export async function generateClient() {
 
 async function extractNeededTypesFromProject({
   interfaceList,
+  passes = 0,
 }: {
   interfaceList: string[];
+  passes?: number;
 }) {
+  console.log("extractNeededTypesFromProject", interfaceList);
   let interfaceString = "";
   let interfaceStringList: string[] = [];
   // Find type location
@@ -77,9 +80,16 @@ async function extractNeededTypesFromProject({
   // TODO find nested Types.
   for (const intstr of interfaceStringList) {
     const nestedTypes = getNestedTypesFromTypeString(intstr);
-    if (nestedTypes.length) {
+    console.log("getNestedTypesFromTypeString", nestedTypes);
+    if (
+      nestedTypes.length &&
+      !interfaceList.includes(intstr) &&
+      !nestedTypes.includes(intstr) &&
+      passes <= 3
+    ) {
       const nestedInterfaces = await extractNeededTypesFromProject({
-        interfaceList: nestedTypes,
+        interfaceList: [...new Set([...nestedTypes, ...interfaceList])],
+        passes: passes + 1,
       });
 
       interfaceStringList = [
@@ -123,12 +133,14 @@ function getNestedTypesFromTypeString(type: string) {
         // end of type declaration;
         isScaningType = false;
         tempNestedType = tempNestedType.trim();
+        tempNestedType = tempNestedType.replace("]", "");
+        tempNestedType = tempNestedType.replace("[", "");
         if (
-          tempNestedType !== "boolean" &&
-          tempNestedType !== "string" &&
-          tempNestedType !== "number" &&
-          tempNestedType !== "any" &&
-          tempNestedType !== "void"
+          !tempNestedType.includes("boolean") &&
+          !tempNestedType.includes("string") &&
+          !tempNestedType.includes("number") &&
+          !tempNestedType.includes("any") &&
+          !tempNestedType.includes("void")
         ) {
           nestedTypeName.push(tempNestedType);
         }
@@ -140,7 +152,7 @@ function getNestedTypesFromTypeString(type: string) {
     }
   }
 
-  return nestedTypeName;
+  return [...new Set([...nestedTypeName])];
 }
 
 async function extractSpecificTypeFromFile(filePath: string, typeName: string) {
@@ -184,7 +196,7 @@ function composeInterfacesList(routeDatas: RouteData[]) {
       const startIndex = returnedType.indexOf("Promise<") + 8;
       let interfaceName = "";
       for (let i = startIndex; i < returnedType.length; i++) {
-        if (returnedType[i] === "{") {
+        if (returnedType[i] === "{" || returnedType[i] === "[") {
           break; // it's an inline type
         }
         if (returnedType[i] === ">") {
@@ -192,6 +204,8 @@ function composeInterfacesList(routeDatas: RouteData[]) {
         }
         interfaceName += returnedType[i];
       }
+      interfaceName = interfaceName.replace("[]", "");
+      interfaceName = interfaceName.trim();
       if (
         interfaceName.length &&
         interfaceName !== "void" &&
@@ -214,7 +228,11 @@ async function composeClientClass({
   fnString: string;
   interfaceString: string;
 }) {
-  let destination = "./sexpressClient/";
+  let destination = "./sexpress/";
+
+  if (process.env.CLIENT_DESTINATION) {
+    destination = process.env.CLIENT_DESTINATION;
+  }
 
   await fs.ensureDir(destination);
 
@@ -228,8 +246,20 @@ async function composeClientClass({
   );
   classTemplate = classTemplate.replace("FUNCTIONS", fnString);
   classTemplate = classTemplate.replace("// TYPES_CLIENT", interfaceString);
-  await fs.writeFile(`${destination}/generatedClient.ts`, classTemplate);
-  await fs.writeFile(`${destination}/sexpressClient.ts`, exportTemplate);
+
+  if (process.env.CLIENT_TYPE_PATH) {
+    classTemplate = classTemplate.replace(
+      "// TYPES_IMPORT",
+      process.env.CLIENT_TYPE_PATH
+    );
+  } else {
+    classTemplate = classTemplate.replace("// TYPES_IMPORT", "");
+  }
+
+  await fs.writeFile(`${destination}/sexpressClass.ts`, classTemplate);
+  await fs.writeFile(`${destination}/index.ts`, exportTemplate);
+  console.log(`Client generated at ${destination}`);
+  process.exit();
 }
 
 async function composeClientFunctions(routeDatas: RouteData[]) {

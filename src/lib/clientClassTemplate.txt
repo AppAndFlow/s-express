@@ -1,25 +1,22 @@
-import * as querystring from 'querystring';
+import * as querystring from "querystring";
 
 // TYPES_IMPORT
 
 // TYPES_CLIENT
 
-class SexpressClient {
-  constructor(config: { baseURL?: string } = { baseURL: "" }) {
+class SexpressClass {
+  constructor(
+    config: { baseURL?: string; getHeaders?: () => any } = {
+      baseURL: "",
+      getHeaders: () => ({}),
+    }
+  ) {
     this.baseURL = config.baseURL || "";
+    this.headerFn = config.getHeaders;
   }
 
-
   getHeaders = () => {
-    // const { token } = rootStore.user;
-
-    // if (token && !noAuthorization) {
-    //   return {
-    //     ...BASE_HEADERS,
-    //     authorization: `Bearer ${token}`,
-    //   };
-    // }
-    return this.BASE_HEADERS;
+    return { ...this.BASE_HEADERS, ...this.headerFn() };
   };
 
   BASE_HEADERS = {
@@ -29,7 +26,7 @@ class SexpressClient {
   };
 
   baseURL = "";
-
+  headerFn: any = () => ({});
 
   put = (url: string, data: any = {}) => {
     return this._fetch(this.baseURL + url, {
@@ -87,15 +84,7 @@ class SexpressClient {
     return res.json();
   };
 
-
-
-
-  FUNCTIONS
-
-
-
-
-
+  FUNCTIONS;
 }
 
-export default SexpressClient;
+export default SexpressClass;
