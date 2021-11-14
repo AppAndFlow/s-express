@@ -6,6 +6,10 @@ export async function generateClient() {
   // TODO we must run tsconfig.js with     "declaration": true,
   // this will generate .d.ts
 
+  if (!process.env.CLIENT_MODE) {
+    return;
+  }
+
   setTimeout(async () => {
     const config = getConfig();
     const controllerPath = `${process.cwd()}/${config.controllersPath}`.replace(
@@ -202,13 +206,22 @@ async function composeClientClass({
   fnString: string;
   interfaceString: string;
 }) {
+  let destination = "./sexpressClient/";
+
+  await fs.ensureDir(destination);
+
   let classTemplate = await fs.readFile(
     `${process.cwd()}/src/lib/clientClassTemplate.txt`,
     "utf8"
   );
+  let exportTemplate = await fs.readFile(
+    `${process.cwd()}/src/lib/clientExportTemplate.txt`,
+    "utf8"
+  );
   classTemplate = classTemplate.replace("FUNCTIONS", fnString);
   classTemplate = classTemplate.replace("// TYPES_CLIENT", interfaceString);
-  await fs.writeFile("./test.txt", classTemplate);
+  await fs.writeFile(`${destination}/generatedClient.ts`, classTemplate);
+  await fs.writeFile(`${destination}/sexpressClient.ts`, exportTemplate);
 }
 
 async function composeClientFunctions(routeDatas: RouteData[]) {
@@ -228,8 +241,10 @@ async function composeClientFunctions(routeDatas: RouteData[]) {
 
     if (routeData.payloadType === "void" || !routeData.payloadType) {
       fnText = fnText.replace("payload: PAYLOAD_TYPE", "");
+      fnText = fnText.replace(", PAYLOAD_TO_SEND", "");
     } else {
       fnText = fnText.replace("PAYLOAD_TYPE", routeData.payloadType);
+      fnText = fnText.replace("PAYLOAD_TO_SEND", "payload");
     }
 
     let tempName = "";

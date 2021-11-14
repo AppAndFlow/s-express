@@ -5,5 +5,9 @@ export interface MM {
 }
 
 interface Allo {
-  ho: string;
+  ho: Bonjour;
+}
+
+interface Bonjour {
+  monAllo: string;
 }

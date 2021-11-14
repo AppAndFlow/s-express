@@ -1,9 +1,101 @@
+import * as querystring from 'querystring';
+
 // TYPES_IMPORT
 
 // TYPES_CLIENT
 
 class SexpressClient {
+  constructor(config: { baseURL?: string } = { baseURL: "" }) {
+    this.baseURL = config.baseURL || "";
+  }
+
+
+  getHeaders = () => {
+    // const { token } = rootStore.user;
+
+    // if (token && !noAuthorization) {
+    //   return {
+    //     ...BASE_HEADERS,
+    //     authorization: `Bearer ${token}`,
+    //   };
+    // }
+    return this.BASE_HEADERS;
+  };
+
+  BASE_HEADERS = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "Cache-Control": "no-cache",
+  };
+
+  baseURL = "";
+
+
+  put = (url: string, data: any = {}) => {
+    return this._fetch(this.baseURL + url, {
+      method: "PUT",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+  };
+
+  post = (url: string, data: any = {}) => {
+    return this._fetch(this.baseURL + url, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+  };
+
+  patch = (url: string, data: any = {}) => {
+    return this._fetch(this.baseURL + url, {
+      method: "PATCH",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+  };
+
+  get = (url: string, params: any = {}) => {
+    const queryString = "?" + querystring.stringify(params);
+    return this._fetch(this.baseURL + url + queryString, {
+      method: "GET",
+      headers: this.getHeaders(),
+    });
+  };
+
+  delete = (url: string, params: any = {}) => {
+    const queryString = "?" + querystring.stringify(params);
+    return this._fetch(this.baseURL + url + queryString, {
+      method: "DELETE",
+      headers: this.getHeaders(),
+    });
+  };
+
+  _fetch = async (url: string, options: any) => {
+    const res = await fetch(url, options);
+    // if (res.status >= BAD_REQUEST) {
+    //   if (res.status === EXPIRED_TOKEN) {
+    //     const refreshToken = await SecureStore.getItemAsync('rft');
+    //     if (refreshToken) {
+    //       // refresh token logic
+    //     }
+    //   } else {
+    //     const resJson = await res.json();
+    //     throw resJson.error;
+    //   }
+    // }
+    return res.json();
+  };
+
+
+
+
   FUNCTIONS
+
+
+
+
+
 }
 
 export default SexpressClient;

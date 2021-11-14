@@ -21,7 +21,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "buildStart": "npm run build && NODE_ENV=production node dist/index.js",
     "gen": "rm -rf docs && tsc && DOC_MODE=true node dist/index.js",
-    "generateClient": "CLIENT_MODE=true node dist/index.js",
+    "generateClient": "rm -rf sexpressClient && tsc -declaration && CLIENT_MODE=true node dist/index.js",
     "tsc": "tsc --noEmit"
   },
   "dependencies": {

@@ -20,7 +20,9 @@ export async function editActor(a: any) {
 export async function getSimpleActor(a: any) {
   const b: MM = {
     a: {
-      ho: "da",
+      ho: {
+        monAllo: "aaaaa",
+      },
     },
     hihi: "d",
     nono: 4,

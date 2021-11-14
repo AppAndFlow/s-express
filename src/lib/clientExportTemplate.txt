@@ -1,0 +1,7 @@
+import GeneratedClient from './generatedClient';
+
+
+const sexpressClient = new GeneratedClient();
+
+
+export default sexpressClient;
