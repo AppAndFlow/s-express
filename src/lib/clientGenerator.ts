@@ -46,7 +46,7 @@ async function extractNeededTypesFromProject({
   interfaceList: string[];
 }) {
   let interfaceString = "";
-  const interfaceStringList: string[] = [];
+  let interfaceStringList: string[] = [];
   // Find type location
   const projectPaths = await getFilesForDir(`${process.cwd()}`);
   const projectValidPaths = projectPaths.filter((path) =>
@@ -67,10 +67,24 @@ async function extractNeededTypesFromProject({
   }
 
   // TODO find nested Types.
+  for (const intstr of interfaceStringList) {
+    const nestedTypes = getNestedTypesFromTypeString(intstr);
+    if (nestedTypes.length) {
+      const nestedInterfaces = await extractNeededTypesFromProject({
+        interfaceList: nestedTypes,
+      });
+
+      interfaceStringList = [
+        ...new Set([...interfaceStringList, nestedInterfaces]),
+      ];
+    }
+  }
 
   interfaceStringList.forEach((intstr) => {
     interfaceString += intstr + "\n";
   });
+
+  console.log(interfaceStringList);
 
   return interfaceString;
 }
@@ -79,15 +93,41 @@ function getNestedTypesFromTypeString(type: string) {
   const nestedTypeName: string[] = [];
   let level = 0;
   let startIndex = type.indexOf("{");
+  let isScaningType = false;
+  let tempNestedType = "";
   for (let i = startIndex; i < type.length; i++) {
     if (type[i] === "{") {
       level++;
+      isScaningType = false; // it's an inline type
     }
     if (type[i] === "}") {
       if (level === 0) {
         break; // end of type
       } else {
         level--;
+      }
+    }
+    if (type[i] === ":") {
+      isScaningType = true;
+      // we found type declaration
+    } else if (isScaningType) {
+      if (type[i] === ";") {
+        // end of type declaration;
+        isScaningType = false;
+        tempNestedType = tempNestedType.trim();
+        if (
+          tempNestedType !== "boolean" &&
+          tempNestedType !== "string" &&
+          tempNestedType !== "number" &&
+          tempNestedType !== "any" &&
+          tempNestedType !== "void"
+        ) {
+          nestedTypeName.push(tempNestedType);
+        }
+
+        tempNestedType = "";
+      } else {
+        tempNestedType += type[i];
       }
     }
   }
@@ -98,7 +138,7 @@ function getNestedTypesFromTypeString(type: string) {
 async function extractSpecificTypeFromFile(filePath: string, typeName: string) {
   let finalStr = "";
   const fileString = await fs.readFile(filePath, "utf8");
-  const typeStartIndex = fileString.indexOf(typeName);
+  const typeStartIndex = fileString.indexOf("interface " + typeName);
   if (typeStartIndex === -1) {
     return finalStr;
   }
@@ -106,6 +146,7 @@ async function extractSpecificTypeFromFile(filePath: string, typeName: string) {
   let gotCore = false;
   for (let i = typeStartIndex; i < fileString.length; i++) {
     finalStr += fileString[i];
+
     if (fileString[i] === "{") {
       if (gotCore) {
         level += 1;
@@ -122,7 +163,7 @@ async function extractSpecificTypeFromFile(filePath: string, typeName: string) {
     }
   }
   if (finalStr.length) {
-    return "interface " + finalStr;
+    return finalStr;
   }
   return finalStr;
 }
