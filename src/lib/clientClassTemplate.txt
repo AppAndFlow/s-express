@@ -9,7 +9,7 @@ class SexpressClass {
     config: {
       baseURL?: string;
       getHeaders?: () => any;
-      onError: (status: number, error: Error) => any;
+      onError?: (status: number, error: Error) => any;
     } = {
       baseURL: "",
       getHeaders: () => ({}),
@@ -79,14 +79,15 @@ class SexpressClass {
     const res = await fetch(url, options);
 
     if (res.status >= 400) {
-      let jsonError;
+      let jsonError: any;
       try {
         const errJson = await res.json();
         if (errJson.error) {
           jsonError = new Error(errJson.error);
         }
       } catch (e) {
-        jsonError = new Error(e);
+        const err: any = e;
+        jsonError = new Error(err);
       } finally {
         if (this.onError) {
           this.onError(res.status, jsonError);
