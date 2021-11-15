@@ -9,12 +9,12 @@ class SexpressClass {
     config: {
       baseURL?: string;
       getHeaders?: () => any;
-      onError?: (status: number, error: Error) => any;
+      onError: (status: number, error: Error) => Promise<any>;
     } = {
-      baseURL: "",
+      baseURL: '',
       getHeaders: () => ({}),
-      onError: (status, error) => null,
-    }
+      onError: async () => null,
+    },
   ) {
     this.baseURL = config.baseURL || "";
     this.headerFn = config.getHeaders;
@@ -33,7 +33,7 @@ class SexpressClass {
 
   baseURL = "";
   headerFn: any = () => ({});
-  onError: (status: number, error: Error) => {};
+  onError: (status: number, error: Error) => Promise<any>;
 
   put = (url: string, data: any = {}) => {
     return this._fetch(this.baseURL + url, {
@@ -90,8 +90,11 @@ class SexpressClass {
         jsonError = new Error(err);
       } finally {
         if (this.onError) {
-          this.onError(res.status, jsonError);
+          await this.onError(res.status, jsonError, async () =>
+            this._fetch(url, options),
+          );
         } else {
+          // eslint-disable-next-line
           throw jsonError;
         }
       }
