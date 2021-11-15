@@ -6,13 +6,19 @@ import * as querystring from "querystring";
 
 class SexpressClass {
   constructor(
-    config: { baseURL?: string; getHeaders?: () => any } = {
+    config: {
+      baseURL?: string;
+      getHeaders?: () => any;
+      onError: (status: number, error: Error) => any;
+    } = {
       baseURL: "",
       getHeaders: () => ({}),
+      onError: (status, error) => null,
     }
   ) {
     this.baseURL = config.baseURL || "";
     this.headerFn = config.getHeaders;
+    this.onError = config.onError;
   }
 
   getHeaders = () => {
@@ -27,6 +33,7 @@ class SexpressClass {
 
   baseURL = "";
   headerFn: any = () => ({});
+  onError: (status: number, error: Error) => {};
 
   put = (url: string, data: any = {}) => {
     return this._fetch(this.baseURL + url, {
@@ -70,18 +77,26 @@ class SexpressClass {
 
   _fetch = async (url: string, options: any) => {
     const res = await fetch(url, options);
-    // if (res.status >= BAD_REQUEST) {
-    //   if (res.status === EXPIRED_TOKEN) {
-    //     const refreshToken = await SecureStore.getItemAsync('rft');
-    //     if (refreshToken) {
-    //       // refresh token logic
-    //     }
-    //   } else {
-    //     const resJson = await res.json();
-    //     throw resJson.error;
-    //   }
-    // }
-    return res.json();
+
+    if (res.status >= 400) {
+      let jsonError;
+      try {
+        const errJson = await res.json();
+        if (errJson.error) {
+          jsonError = new Error(errJson.error);
+        }
+      } catch (e) {
+        jsonError = new Error(e);
+      } finally {
+        if (this.onError) {
+          this.onError(res.status, jsonError);
+        } else {
+          throw jsonError;
+        }
+      }
+    } else {
+      return res.json();
+    }
   };
 
   FUNCTIONS;
