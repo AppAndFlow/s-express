@@ -85,6 +85,7 @@ class SexpressClass {
     });
   };
 
+  // @ts-ignore
   _fetch = async (url: string, options: any) => {
     const res = await fetch(url, options);
 
@@ -100,7 +101,8 @@ class SexpressClass {
         jsonError = new Error(err);
       } finally {
         if (this.onError) {
-          await this.onError(res.status, jsonError, async () => {
+          // eslint-disable-next-line
+          return this.onError(res.status, jsonError, async () => {
             const updatedOptions = {
               ...options,
               headers: this.getHeaders(),

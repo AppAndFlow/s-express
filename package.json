@@ -12,7 +12,7 @@
   "files": [
     "dist"
   ],
-  "version": "1.1.0-beta.10",
+  "version": "1.1.0-beta.11",
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --ignore /tmp --ext ts --exec 'tsc && node dist/index.js'",
