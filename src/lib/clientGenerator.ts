@@ -257,7 +257,11 @@ async function composeClientClass({
   }
 
   await fs.writeFile(`${destination}/sexpressClass.ts`, classTemplate);
-  await fs.writeFile(`${destination}/index.ts`, exportTemplate);
+  const exists = await fs.pathExists(`${destination}/index.ts`);
+  if (!exists) {
+    await fs.writeFile(`${destination}/index.ts`, exportTemplate);
+  }
+
   console.log(`Client generated at ${destination}`);
   process.exit();
 }
