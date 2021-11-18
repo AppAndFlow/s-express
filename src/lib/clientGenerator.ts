@@ -512,15 +512,15 @@ function multiSearchOr(text: string, searchWords: string[]) {
   const indexes: number[] = [];
   let copy = text;
   while (copy.indexOf(searchWords[0]) !== -1) {
-    for (var i = 0; i < searchWords.length; i++) {
-      const index = copy.indexOf(searchWords[i]);
+    for (let i = 0; i < searchWords.length; i++) {
+      const index = text.indexOf(searchWords[i]);
       if (index !== -1) {
         if (
-          copy[index + searchWords[i].length] === "(" ||
-          copy[index + searchWords[i].length] === "<"
+          text[index + searchWords[i].length] === "(" ||
+          text[index + searchWords[i].length] === "<"
         ) {
           // it's a route declaration
-          indexes.push(copy.indexOf(searchWords[i]));
+          indexes.push(text.indexOf(searchWords[i]));
         }
 
         copy = copy.replace(searchWords[i], "");
