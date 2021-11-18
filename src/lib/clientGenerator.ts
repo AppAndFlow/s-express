@@ -353,7 +353,10 @@ async function extractReturnedValueFromFunction(
 
 async function findAllAddRouteOccurences(filePath: string) {
   const file = await fs.readFile(filePath, "utf8");
-  const addRouteLocations = multiSearchOr(file, ["addRoute"]); // Todo add support for other thing then "addRoute"
+  const addRouteLocations = [
+    ...searchIndexes(file, "addRoute<"),
+    ...searchIndexes(file, "addRoute("),
+  ]; // Todo add support for other thing then "addRoute"
   return addRouteLocations;
 }
 
@@ -508,24 +511,25 @@ function findReturnedValue(str: string) {
   return res;
 }
 
-function multiSearchOr(text: string, searchWords: string[]) {
-  const indexes: number[] = [];
-  let copy = text;
-  while (copy.indexOf(searchWords[0]) !== -1) {
-    for (let i = 0; i < searchWords.length; i++) {
-      const index = text.indexOf(searchWords[i]);
-      if (index !== -1) {
-        if (
-          text[index + searchWords[i].length] === "(" ||
-          text[index + searchWords[i].length] === "<"
-        ) {
-          // it's a route declaration
-          indexes.push(text.indexOf(searchWords[i]));
-        }
-
-        copy = copy.replace(searchWords[i], "");
-      }
+function searchIndexes(source: string, find: string) {
+  if (!source) {
+    return [];
+  }
+  // if find is empty string return all indexes.
+  if (!find) {
+    // or shorter arrow function:
+    // return source.split('').map((_,i) => i);
+    return source.split("").map(function(_, i) {
+      return i;
+    });
+  }
+  const result = [];
+  for (let i = 0; i < source.length; ++i) {
+    // If you want to search case insensitive use
+    // if (source.substring(i, i + find.length).toLowerCase() == find) {
+    if (source.substring(i, i + find.length) == find) {
+      result.push(i);
     }
   }
-  return indexes;
+  return result;
 }
