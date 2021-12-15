@@ -330,7 +330,8 @@ async function extractReturnedValueFromFunction(
 ) {
   const file = await fs.readFile(filePath, "utf8");
 
-  const fnIndex = file.indexOf(routeData.string);
+  // We add '(' so we know it the end of the function declaration
+  const fnIndex = file.indexOf(routeData.string + "(");
 
   if (fnIndex !== -1) {
     const fnStart = file.substring(fnIndex);
