@@ -552,7 +552,6 @@ function searchIndexes(source: string, find: string) {
 
 function correctTypeIfClientTypePathIsDefined(typeString: string) {
   let mustAddPromise = false;
-  console.log(typeString);
   if (!process.env.CLIENT_TYPE_PATH) {
     return typeString;
   }
@@ -617,27 +616,12 @@ function correctTypeIfClientTypePathIsDefined(typeString: string) {
   let correctedVersion = typeString;
 
   extractedTypes.forEach((extracted, index) => {
-    const duplicate = extractedTypes.filter((current) => extracted === current)
-      .length;
-
-    correctedVersion = correctedVersion.replaceAll(
-      extracted,
-      correctedTypes[index]
-    );
-
-    if (duplicate > 1) {
-      let wordToReplace = "";
-      Array.from({ length: duplicate }, (_, i) => i).forEach((_) => {
-        wordToReplace += "ALL_TYPES.";
-      });
-      if (correctedVersion.includes(wordToReplace)) {
-        correctedVersion = correctedVersion.replaceAll(wordToReplace, "");
-      }
+    if (!correctedVersion.includes(`ALL_TYPES.${extracted}`)) {
+      correctedVersion = correctedVersion.replaceAll(
+        extracted,
+        correctedTypes[index]
+      );
     }
-
-    // patch to remove duplace ALL_TYPES.
-
-    console.log(extracted, correctedTypes[index], correctedVersion);
   });
 
   if (mustAddPromise) {
