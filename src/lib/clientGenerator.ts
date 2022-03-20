@@ -25,14 +25,14 @@ export async function generateClient() {
     for (const path of validPaths) {
       const file = await fs.readFile(path, "utf8");
       const routeDeclarations = await findAllAddRouteOccurences(path);
-      console.log(path);
+      // console.log(path);
       const routeDatas = routeDeclarations.map((index) =>
         findReturnedValue(file.slice(index))
       );
       await findFunctionsData(routeDatas);
 
       fnString += await composeClientFunctions(routeDatas);
-      console.log(routeDatas);
+      // console.log(routeDatas);
 
       let interfaces = composeInterfacesList(routeDatas);
       interfaceList = [...interfaceList, ...interfaces];
@@ -40,7 +40,7 @@ export async function generateClient() {
 
     interfaceList = [...new Set(interfaceList)];
 
-    console.log(interfaceList);
+    // console.log(interfaceList);
 
     // interfaceString = await extractNeededTypesFromProject({ interfaceList }); ------> TODO: review the whole logic to import types.
 
@@ -55,7 +55,7 @@ async function extractNeededTypesFromProject({
   interfaceList: string[];
   passes?: number;
 }) {
-  console.log("extractNeededTypesFromProject", interfaceList);
+  // console.log("extractNeededTypesFromProject", interfaceList);
   let interfaceString = "";
   let interfaceStringList: string[] = [];
   // Find type location
@@ -80,7 +80,7 @@ async function extractNeededTypesFromProject({
   // TODO find nested Types.
   for (const intstr of interfaceStringList) {
     const nestedTypes = getNestedTypesFromTypeString(intstr);
-    console.log("getNestedTypesFromTypeString", nestedTypes);
+    // console.log("getNestedTypesFromTypeString", nestedTypes);
     if (
       nestedTypes.length &&
       !interfaceList.includes(intstr) &&
@@ -102,7 +102,7 @@ async function extractNeededTypesFromProject({
     interfaceString += intstr + "\n";
   });
 
-  console.log(interfaceStringList);
+  // console.log(interfaceStringList);
 
   return interfaceString;
 }
@@ -272,10 +272,21 @@ async function composeClientFunctions(routeDatas: RouteData[]) {
     "utf8"
   );
 
+  let importPrefx = "";
+
+  if (process.env.CLIENT_TYPE_PATH) {
+    importPrefx = "ALL_TYPES.";
+  }
+
   let fnsString = "\n";
 
   routeDatas.forEach((routeData) => {
     let fnText = fnTemplate;
+
+    routeData.returnedType = correctTypeIfClientTypePathIsDefined(
+      routeData.returnedType
+    );
+
     fnText = fnText.replace("RETURNED_TYPE", routeData.returnedType);
     fnText = fnText.replace("HTTP_METHOD", routeData.httpMethod.toLowerCase());
     fnText = fnText.replace("HTTP_METHOD", routeData.httpMethod.toLowerCase());
@@ -285,6 +296,10 @@ async function composeClientFunctions(routeDatas: RouteData[]) {
       fnText = fnText.replace("payload: PAYLOAD_TYPE", "");
       fnText = fnText.replace(", PAYLOAD_TO_SEND", "");
     } else {
+      routeData.payloadType = correctTypeIfClientTypePathIsDefined(
+        routeData.payloadType
+      );
+
       fnText = fnText.replace("PAYLOAD_TYPE", routeData.payloadType);
       fnText = fnText.replace("PAYLOAD_TO_SEND", "payload");
     }
@@ -533,4 +548,151 @@ function searchIndexes(source: string, find: string) {
     }
   }
   return result;
+}
+
+function correctTypeIfClientTypePathIsDefined(typeString: string) {
+  let mustAddPromise = false;
+  console.log(typeString);
+  if (!process.env.CLIENT_TYPE_PATH) {
+    return typeString;
+  }
+
+  if (typeString.includes("Promise<")) {
+    mustAddPromise = true;
+    typeString = typeString.replace("Promise<", "");
+    typeString = typeString.replace(">", "");
+  }
+
+  const primatyTypes = [
+    "number",
+    "string",
+    "null",
+    "void",
+    "undefined",
+    "any",
+    "unknown",
+  ];
+
+  const correctedTypes: string[] = [];
+  const extractedTypes = extractTypesFromObj(typeString);
+
+  extractedTypes.forEach((types) => {
+    let corrected = types;
+
+    if (primatyTypes.includes(types)) {
+      correctedTypes.push(corrected);
+    } else {
+      let edited = "";
+      const words = types.split(" ");
+
+      const correctedWords = words.map((word) => {
+        // fix for (
+        let needFirstParenthese = false;
+
+        if (word.charAt(0) === "(") {
+          needFirstParenthese = true;
+          word = word.slice(1);
+        }
+
+        if (primatyTypes.includes(word)) {
+          return word;
+        } else if (word.length === 1 && !isLetter(word)) {
+          return word;
+        } else {
+          if (word.includes("Partial<") && word.includes(">")) {
+            let temp = "";
+            temp = word.replace("Partial<", "");
+            temp = temp.replace(">", "");
+            return `Partial<ALL_TYPES.${temp}>`;
+          } else {
+            return `${needFirstParenthese ? "(" : ""}ALL_TYPES.${word}`;
+          }
+        }
+      });
+      edited = correctedWords.join(" ");
+      correctedTypes.push(edited.trim());
+    }
+  });
+
+  let correctedVersion = typeString;
+
+  extractedTypes.forEach((extracted, index) => {
+    const duplicate = extractedTypes.filter((current) => extracted === current)
+      .length;
+
+    correctedVersion = correctedVersion.replaceAll(
+      extracted,
+      correctedTypes[index]
+    );
+
+    if (duplicate > 1) {
+      let wordToReplace = "";
+      Array.from({ length: duplicate }, (_, i) => i).forEach((_) => {
+        wordToReplace += "ALL_TYPES.";
+      });
+      if (correctedVersion.includes(wordToReplace)) {
+        correctedVersion = correctedVersion.replaceAll(wordToReplace, "");
+      }
+    }
+
+    // patch to remove duplace ALL_TYPES.
+
+    console.log(extracted, correctedTypes[index], correctedVersion);
+  });
+
+  if (mustAddPromise) {
+    correctedVersion = `Promise<${correctedVersion}>`;
+  }
+
+  return correctedVersion;
+}
+
+function isLetter(str: string) {
+  return str.length === 1 && str.match(/[a-z]/i);
+}
+
+/**
+ *
+ * Receive { videos: Artist['videos']; text: string }
+ * and returns
+ * ["Artist['videos']", "string"]
+ */
+function extractTypesFromObj(obj: string) {
+  let types: string[] = [];
+  let started = false;
+  let currentType = "";
+  let typeDeclarationStarted = false;
+  for (let i = 0; i < obj.length; i++) {
+    if (obj.charAt(i) === "}") {
+      started = false;
+      currentType = currentType.trim();
+      if (currentType.length) {
+        types.push(currentType);
+      }
+      break;
+    } else if (obj.charAt(i) === "{") {
+      started = true;
+    } else if (started) {
+      if (obj.charAt(i) === ":") {
+        typeDeclarationStarted = true;
+      } else if (typeDeclarationStarted) {
+        currentType += obj.charAt(i);
+        if (obj.charAt(i) === ";" || obj.charAt(i) === ",") {
+          typeDeclarationStarted = false;
+          types.push(currentType.trim());
+          currentType = "";
+        }
+      }
+    }
+  }
+
+  if (!types.length && obj.length) {
+    types.push(obj.trim());
+  }
+
+  types = types.map((type) => {
+    return type.replace(";", "");
+  });
+
+  return types;
 }
