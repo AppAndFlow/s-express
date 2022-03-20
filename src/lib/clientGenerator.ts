@@ -570,6 +570,7 @@ function correctTypeIfClientTypePathIsDefined(typeString: string) {
     "undefined",
     "any",
     "unknown",
+    "boolean",
   ];
 
   const correctedTypes: string[] = [];
@@ -604,7 +605,12 @@ function correctTypeIfClientTypePathIsDefined(typeString: string) {
             temp = temp.replace(">", "");
             return `Partial<ALL_TYPES.${temp}>`;
           } else {
-            return `${needFirstParenthese ? "(" : ""}ALL_TYPES.${word}`;
+            if (word.charAt(0) === "'" || word.charAt(0) === '"') {
+              // enum string.
+              return word;
+            } else {
+              return `${needFirstParenthese ? "(" : ""}ALL_TYPES.${word}`;
+            }
           }
         }
       });
