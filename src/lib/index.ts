@@ -176,7 +176,10 @@ export function addRoute<Data = unknown, Params = unknown, Ctx = unknown>(
       }
 
       // TODO add support to support other rest code then 200 for instance
-      res.json(result);
+      if (!res.headersSent) {
+        // Check to make sure that req.send has not been used yet.
+        res.json(result);
+      }
     }
   );
 }

@@ -17,7 +17,7 @@ export async function generateDocs() {
   }
 
   console.log(
-    "\nProject started in DOC_MODE. Documentation will now generate 📑\nProcess will kill itself at the end.\n",
+    "\nProject started in DOC_MODE. Documentation will now generate 📑\nProcess will kill itself at the end.\n"
   );
 
   setTimeout(async () => {
@@ -42,8 +42,23 @@ export async function generateDocs() {
         body: ["PUT", "POST"].includes(route.method)
           ? JSON.stringify({})
           : undefined,
-      }).then((r) => r.json());
+      }).then((r) => {
+        return new Promise(async (resolve) => {
+          try {
+            if (r.headers.get("content-type")?.includes("json")) {
+              const jsonRes = await r.json();
+              resolve(jsonRes);
+            } else {
+              const textRes = await r.text();
+              resolve(textRes);
+            }
+          } catch (e) {
+            resolve({});
+          }
+        });
+      });
 
+      const isResponseJson = typeof res === "string" ? false : true;
       let formatedTypeName = "";
       const params: string[] = [];
 
@@ -70,41 +85,55 @@ export async function generateDocs() {
           .join("");
       }
 
+      let openApiDocContent: any = {};
+
+      const jsonFilePath = `${tmpPath}/tmp.json`;
+      const typeFile = `${tmpPath}/tmp.ts`;
+
       try {
-        const jsonFilePath = `${tmpPath}/tmp.json`;
+        if (isResponseJson) {
+          await fs.writeJSON(jsonFilePath, res);
 
-        await fs.writeJSON(jsonFilePath, res);
+          const typeName = `${route.method[0] +
+            route.method
+              .substring(1)
+              .toLowerCase()}${formatedTypeName}Response`;
 
-        const typeName = `${route.method[0] +
-          route.method.substring(1).toLowerCase()}${formatedTypeName}Response`;
+          const cm1 = await command(
+            `node ${process.cwd()}/node_modules/quicktype/dist/cli/index.js ${jsonFilePath} -l typescript --just-types -t ${typeName}`
+          );
 
-        const cm1 = await command(
-          `node ${process.cwd()}/node_modules/quicktype/dist/cli/index.js ${jsonFilePath} -l typescript --just-types -t ${typeName}`,
-        );
+          await fs.writeFile(typeFile, cm1.stdout);
 
-        const typeFile = `${tmpPath}/tmp.ts`;
-        await fs.writeFile(typeFile, cm1.stdout);
+          // TODO use node path
 
-        // TODO use node path
+          const { stdout } = await command(
+            `node ${process.cwd()}/node_modules/ts-to-openapi/dist/bin/ts-to-openapi -f ${typeFile} -t ${typeName}`
+          );
 
-        const { stdout } = await command(
-          `node ${process.cwd()}/node_modules/ts-to-openapi/dist/bin/ts-to-openapi -f ${typeFile} -t ${typeName}`,
-        );
+          let fixed = stdout.replace("/**", "");
+          fixed = fixed.replace("*/", "");
+          fixed = fixed.replace(/ \* /g, "");
+          fixed = fixed.replace("@swagger", "---");
 
-        let fixed = stdout.replace("/**", "");
-        fixed = fixed.replace("*/", "");
-        fixed = fixed.replace(/ \* /g, "");
-        fixed = fixed.replace("@swagger", "---");
+          const doc = yaml.safeLoad(fixed) as any;
 
-        const doc = yaml.safeLoad(fixed) as any;
-
-        const keys = Object.keys(doc.components.schemas);
-        // @ts-ignore
-
-        keys.forEach((key) => {
+          const keys = Object.keys(doc.components.schemas);
           // @ts-ignore
-          openApiDoc.components.schemas[key] = doc.components.schemas[key];
-        });
+
+          keys.forEach((key) => {
+            // @ts-ignore
+            openApiDoc.components.schemas[key] = doc.components.schemas[key];
+          });
+
+          openApiDocContent = {
+            "application/json": {
+              schema: {
+                $ref: `#/components/schemas/${typeName}`,
+              },
+            },
+          };
+        }
 
         let pathToUse = route.path;
 
@@ -118,6 +147,17 @@ export async function generateDocs() {
           openApiDoc.paths[pathToUse] = {};
         }
 
+        if (!isResponseJson) {
+          openApiDocContent = {
+            "text/plain": {
+              schema: {
+                type: "string",
+                example: res,
+              },
+            },
+          };
+        }
+
         // @ts-ignore
         openApiDoc.paths[pathToUse][route.method.toLowerCase()] = {
           summary: route.summary,
@@ -126,13 +166,7 @@ export async function generateDocs() {
           responses: {
             "200": {
               description: "",
-              content: {
-                "application/json": {
-                  schema: {
-                    $ref: `#/components/schemas/${typeName}`,
-                  },
-                },
-              },
+              content: openApiDocContent,
             },
           },
         };
@@ -140,13 +174,16 @@ export async function generateDocs() {
         if (tag) {
           Object.assign(
             openApiDoc.paths[pathToUse][route.method.toLowerCase()],
-            tag,
+            tag
           );
         }
 
         jsonOpenApiPath = `${tmpPath}/openApiDoc.json`;
         await fs.writeJSON(jsonOpenApiPath, openApiDoc);
-        await Promise.all([fs.remove(typeFile), fs.remove(jsonFilePath)]);
+        await Promise.allSettled([
+          fs.remove(typeFile),
+          fs.remove(jsonFilePath),
+        ]);
       } catch (e) {
         console.log(e);
       }
@@ -155,11 +192,11 @@ export async function generateDocs() {
     const yamlOpenApiPath = await generateYamlFromOpenApiJson(jsonOpenApiPath);
 
     await command(
-      `node ${process.cwd()}/node_modules/openapi-markdown/bin/index.js -i ${yamlOpenApiPath}`,
+      `node ${process.cwd()}/node_modules/openapi-markdown/bin/index.js -i ${yamlOpenApiPath}`
     );
 
     console.log(
-      "\nOpenAPI Documentation generated under /docs 📙\nJob's done - shuting down process.\n",
+      "\nOpenAPI Documentation generated under /docs 📙\nJob's done - shuting down process.\n"
     );
 
     process.exit();
@@ -191,7 +228,7 @@ function _initOpenApiDoc() {
 async function generateYamlFromOpenApiJson(jsonFilePath: string) {
   const jsonData = await fs.readJSON(jsonFilePath);
   const yamlData = JSONTOYAML.stringify(jsonData);
-  const yamlFile = "docs/opanApiDoc.yaml";
+  const yamlFile = "docs/openApiDoc.yaml";
   await fs.outputFile(yamlFile, yamlData);
   return yamlFile;
 }
@@ -273,9 +310,7 @@ function _extractTag(route: string) {
     tags: [
       currentRoute.substring(
         0,
-        currentRoute.indexOf("/") === -1
-          ? undefined
-          : currentRoute.indexOf("/"),
+        currentRoute.indexOf("/") === -1 ? undefined : currentRoute.indexOf("/")
       ),
     ],
   };
