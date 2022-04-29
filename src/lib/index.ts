@@ -11,6 +11,11 @@ import { generateDocs } from "./generator";
 import { DEFAULT_PORT } from "./restCodes";
 import { AddRoute, Config, HttpMethod } from "./types";
 import { generateClient } from "./clientGenerator";
+import {
+  getCachedResponse,
+  initCachedResponse,
+  setCachedResponse,
+} from "./cachedResponse";
 
 export function createServer(
   config: Config | undefined = { useCors: true }
@@ -64,6 +69,10 @@ export function createServer(
   generateDocs();
   generateClient();
 
+  if (config.cache) {
+    initCachedResponse(config.cache);
+  }
+
   return expressApp;
 }
 
@@ -89,10 +98,12 @@ export function addRoute<Data = unknown, Params = unknown, Ctx = unknown>(
     fields,
     summary = "",
     description = "",
+    cache,
   }: AddRoute = {
     method: "GET",
     path: "/",
     middlewares: [],
+    cache: undefined,
   }
 ) {
   const expressFn = _getExpressMethodFn(method);
@@ -167,9 +178,22 @@ export function addRoute<Data = unknown, Params = unknown, Ctx = unknown>(
         ctx = req.ctx;
       }
 
-      let result: Record<string, any> = { error: null };
+      let result: Record<string, any> | undefined;
 
-      result = await cb({ req, res, data, params, ctx });
+      if (cache) {
+        result = getCachedResponse({ req, ctx });
+      }
+
+      if (!result) {
+        result = await cb({ req, res, data, params, ctx });
+        if (cache) {
+          setCachedResponse({
+            ctx,
+            req,
+            responseData: result,
+          });
+        }
+      }
 
       if (!result) {
         result = { error: null };

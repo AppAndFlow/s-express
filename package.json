@@ -12,7 +12,7 @@
   "files": [
     "dist"
   ],
-  "version": "1.1.0-beta.20",
+  "version": "1.1.0-beta.23",
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --ignore /tmp --ext ts --exec 'tsc && node dist/index.js'",
@@ -35,13 +35,14 @@
     "js-yaml": "^3.14.0",
     "json-to-pretty-yaml": "^1.2.2",
     "jsonwebtoken": "^8.5.1",
+    "klaw": "^1.3.1",
+    "lru-cache": "^7.8.1",
     "morgan": "^1.10.0",
     "node-fetch": "^2.6.1",
     "openapi-markdown": "^1.2.3",
     "quicktype": "^15.0.258",
     "quicktype-core": "^6.0.69",
     "require-dir": "^1.2.0",
-    "klaw": "^1.3.1",
     "ts-to-openapi": "^1.2.0"
   },
   "devDependencies": {
