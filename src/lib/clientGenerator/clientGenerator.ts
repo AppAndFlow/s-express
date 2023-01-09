@@ -1,5 +1,9 @@
 import fs from "fs-extra";
 import klaw from "klaw";
+import {
+  replaceAllWhole,
+  replaceAllWholeButOnlyCheckPrefix,
+} from "../../utils/replaceAll";
 import { getConfig } from "../store";
 
 export async function generateClient() {
@@ -26,8 +30,16 @@ export async function generateClient() {
       const file = await fs.readFile(path, "utf8");
       const routeDeclarations = await findAllAddRouteOccurences(path);
       // console.log(path);
-      const routeDatas = routeDeclarations.map((index) =>
-        findReturnedValue(file.slice(index))
+      const routeDatas = routeDeclarations.map(
+        (routeReccurenceIndex, currentRouteDeclarationIndex) =>
+          findReturnedValue(
+            file.slice(
+              routeReccurenceIndex,
+              routeDeclarations[currentRouteDeclarationIndex + 1]
+                ? routeDeclarations[currentRouteDeclarationIndex + 1]
+                : undefined
+            )
+          )
       );
       await findFunctionsData(routeDatas);
 
@@ -256,6 +268,9 @@ async function composeClientClass({
     classTemplate = classTemplate.replace("// TYPES_IMPORT", "");
   }
 
+  // patch work around to remove ".import("../sharedTypes")" bug.
+  classTemplate = classTemplate.replaceAll(`import("../sharedTypes").`, "");
+
   await fs.writeFile(`${destination}/sexpressClass.ts`, classTemplate);
   const exists = await fs.pathExists(`${destination}/index.ts`);
   if (!exists) {
@@ -281,6 +296,8 @@ async function composeClientFunctions(routeDatas: RouteData[]) {
   let fnsString = "\n";
 
   routeDatas.forEach((routeData) => {
+    //console.log(routeData);
+
     let fnText = fnTemplate;
 
     routeData.returnedType = correctTypeIfClientTypePathIsDefined(
@@ -322,7 +339,11 @@ async function composeClientFunctions(routeDatas: RouteData[]) {
     // fnText = fnText.replace("FUNCTION_NAME", `${fnName}${tempName}`); // lets use the function name for now
     fnText = fnText.replace("FUNCTION_NAME", routeData.string);
 
-    fnsString += fnText + "\n";
+    if (routeData.string) {
+      // if for some reason the function has no name, we wont add it.
+      // this is an indication of a bug
+      fnsString += fnText + "\n";
+    }
   });
   return fnsString;
 }
@@ -514,13 +535,32 @@ function findReturnedValue(str: string) {
             if (str[i] === ",") {
               payloadType = payloadType.substring(0, payloadType.length - 1);
             }
-            // we wont support nested generic type for now i.e: A<B<c>> // TODO add support for partial.
+            // we wont support nested generic type for now i.e: A<B<c>>
             break;
           }
         }
       }
       if (payloadType.length) {
         res.payloadType = payloadType;
+
+        if (payloadType !== "void") {
+          // check for Partial<...>
+          let copyStr = str;
+
+          copyStr = copyStr.replace(payloadType, "");
+
+          let partialChunk = "";
+          if (copyStr.includes("Partial<")) {
+            partialChunk = copyStr.slice(
+              copyStr.indexOf("Partial<"),
+              copyStr.indexOf(">,") + 1
+            );
+          }
+
+          if (partialChunk.length) {
+            res.payloadType = res.payloadType + " & " + partialChunk;
+          }
+        }
       }
     }
   }
@@ -623,12 +663,21 @@ function correctTypeIfClientTypePathIsDefined(typeString: string) {
 
   extractedTypes.forEach((extracted, index) => {
     if (!correctedVersion.includes(`ALL_TYPES.${extracted}`)) {
-      correctedVersion = correctedVersion.replaceAll(
+      correctedVersion = replaceAllWholeButOnlyCheckPrefix(
+        correctedVersion,
         extracted,
         correctedTypes[index]
       );
     }
   });
+
+  // check for Partial<...>
+  if (correctedVersion.includes("Partial<")) {
+    correctedVersion = correctedVersion.replaceAll(
+      "Partial<",
+      "Partial<ALL_TYPES."
+    );
+  }
 
   if (mustAddPromise) {
     correctedVersion = `Promise<${correctedVersion}>`;
@@ -682,6 +731,29 @@ function extractTypesFromObj(obj: string) {
 
   types = types.map((type) => {
     return type.replace(";", "");
+  });
+
+  // patch for weird cases like this:
+  // we'll spit on spaces and only keep the last past...
+  /* 
+    returnedType: ' Promise<{\n' +
+      '    fourPoints: {\n' +
+      '        p0: Point;\n' +
+      '        p1: Point;\n' +
+      '        p2: Point;\n' +
+      '        p3: Point;\n' +
+      '    };\n' +
+      '}>',
+      extractedTypes
+      [ 'p0 Point', 'Point', 'Point', 'Point' ]
+  */
+  types = types.map((type) => {
+    const splitRes = type.split(" ");
+    if (splitRes.length > 1) {
+      return splitRes[splitRes.length - 1];
+    } else {
+      return type;
+    }
   });
 
   return types;
