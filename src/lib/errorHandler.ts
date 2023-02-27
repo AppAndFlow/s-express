@@ -3,13 +3,17 @@ import { NextFunction, Response } from "express";
 
 import SexpressError from "./sexpressError";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "./restCodes";
+import { getConfig } from "./store";
 
 export default function errorHandler(
   err: SexpressError,
-  _: any,
+  req: any,
   res: Response,
-  __: NextFunction,
+  _: NextFunction
 ) {
+  const config = getConfig();
+  config.onError?.(err, req, res);
+
   let error = err.message;
   let data = err.data;
   let restCode = err.restCode;

@@ -63,7 +63,7 @@ export function createServer(
       requireDir(`${process.cwd()}/${config.controllersPath}`);
     }
     // The error handler needs to be declared last.
-    expressApp.use(errorHandler);
+    expressApp.use(config.errorHandler || errorHandler);
   }, 100);
 
   generateDocs();

@@ -1,6 +1,7 @@
-import { RequestHandler } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import dotenv from "dotenv";
 import morgan from "morgan";
+import SexpressError from "../sexpressError";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -94,6 +95,13 @@ export interface Config {
   generateDoc?: boolean;
   controllersPath?: string;
   cache?: CacheOptions;
+  onError?: (err: SexpressError, req: Request, res: Response) => void;
+  errorHandler?: (
+    err: SexpressError,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => void;
 }
 
 export interface DocServer {
