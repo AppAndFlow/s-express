@@ -4,7 +4,7 @@ import {
   replaceAllWhole,
   replaceAllWholeButOnlyCheckPrefix,
 } from "../../utils/replaceAll";
-import { getConfig } from "../store";
+import { getConfig, getRoutes } from "../store";
 
 export async function generateClient() {
   // TODO we must run tsconfig.js with     "declaration": true,
@@ -56,7 +56,7 @@ export async function generateClient() {
 
     // interfaceString = await extractNeededTypesFromProject({ interfaceList }); ------> TODO: review the whole logic to import types.
 
-    await composeClientClass({ fnString, interfaceString });
+    await composeClientClass({ fnString, interfaceString, interfaceList });
   }, 1000);
 }
 
@@ -113,8 +113,6 @@ async function extractNeededTypesFromProject({
   interfaceStringList.forEach((intstr) => {
     interfaceString += intstr + "\n";
   });
-
-  // console.log(interfaceStringList);
 
   return interfaceString;
 }
@@ -236,9 +234,11 @@ function composeInterfacesList(routeDatas: RouteData[]) {
 async function composeClientClass({
   fnString,
   interfaceString,
+  interfaceList,
 }: {
   fnString: string;
   interfaceString: string;
+  interfaceList: string[];
 }) {
   let destination = "./sexpress/";
 
@@ -270,6 +270,31 @@ async function composeClientClass({
 
   // patch work around to remove ".import("../sharedTypes")" bug.
   classTemplate = classTemplate.replaceAll(`import("../sharedTypes").`, "");
+  classTemplate = classTemplate.replaceAll(`import("../../sharedTypes").`, "");
+  classTemplate = classTemplate.replaceAll(
+    `import("../../../sharedTypes").`,
+    ""
+  );
+
+  // patch work around where we have ALL.TYPES.ALL.TYPES
+  classTemplate = classTemplate.replaceAll(`ALL_TYPES.ALL_TYPES`, "ALL_TYPES");
+
+  // patch work around where sometimes we have ALL_TYPES.string, ALL_TYPES.number, ALL_TYPES.boolean
+  classTemplate = classTemplate.replaceAll(`ALL_TYPES.string`, "string");
+  classTemplate = classTemplate.replaceAll(`ALL_TYPES.number`, "number");
+  classTemplate = classTemplate.replaceAll(`ALL_TYPES.boolean`, "boolean");
+  classTemplate = classTemplate.replaceAll(`ALL_TYPES.null`, "null");
+  classTemplate = classTemplate.replaceAll(`ALL_TYPES.undefined`, "undefined");
+
+  // patch work for some Types that are not correctly set
+  const rawInterfaceList = interfaceList.map((type) => {
+    let correctedType = type;
+    correctedType = correctedType.replaceAll("ALL_TYPES.", "");
+    return correctedType;
+  });
+  rawInterfaceList.forEach((type) => {
+    classTemplate = classTemplate.replaceAll(` ${type}`, ` ALL_TYPES.${type}`);
+  });
 
   await fs.writeFile(`${destination}/sexpressClass.ts`, classTemplate);
   const exists = await fs.pathExists(`${destination}/index.ts`);
@@ -308,6 +333,29 @@ async function composeClientFunctions(routeDatas: RouteData[]) {
     fnText = fnText.replace("HTTP_METHOD", routeData.httpMethod.toLowerCase());
     fnText = fnText.replace("HTTP_METHOD", routeData.httpMethod.toLowerCase());
     fnText = fnText.replace("ROUTE_URL", routeData.urlPath);
+
+    const associatedRoute = getRoutes().find(
+      (route) =>
+        route.method === routeData.httpMethod &&
+        route.path === routeData.urlPath
+    );
+
+    if (
+      associatedRoute &&
+      associatedRoute.description &&
+      associatedRoute.path
+    ) {
+      fnText = fnText.replace(
+        "FUNCTION_DOC",
+        `/**
+       * ${associatedRoute.description}
+
+       * \`${associatedRoute.method} ${associatedRoute.path}\`
+      */`
+      );
+    } else {
+      fnText = fnText.replace("FUNCTION_DOC", "");
+    }
 
     if (routeData.payloadType === "void" || !routeData.payloadType) {
       fnText = fnText.replace("payload: PAYLOAD_TYPE", "");
