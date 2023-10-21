@@ -1,0 +1,8 @@
+export const useFUNCTION_NAME = (payload: PAYLOAD_TYPE, options?: Partial<UseQueryOptions<RETURNED_TYPE>>) => {
+  return useQuery({
+    queryKey: ['FUNCTION_NAME', PAYLOAD_TO_SEND],
+    queryFn: () => sexpressClient.FUNCTION_NAME(PAYLOAD_TO_SEND),
+    ...options,
+  })
+}
+

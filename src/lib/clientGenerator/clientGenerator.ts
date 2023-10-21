@@ -5,6 +5,10 @@ import {
   replaceAllWholeButOnlyCheckPrefix,
 } from "../../utils/replaceAll";
 import { getConfig, getRoutes } from "../store";
+import {
+  composeQueries,
+  composeReactQueryFile,
+} from "../reactQuery/rqGenerator";
 
 export async function generateClient() {
   // TODO we must run tsconfig.js with     "declaration": true,
@@ -24,6 +28,7 @@ export async function generateClient() {
     const paths = await getFilesForDir(controllerPath);
     const validPaths = paths.filter((path) => path.includes(".ts"));
     let fnString = "";
+    let fnRqString = "";
     let interfaceList: string[] = [];
     let interfaceString = "";
     for (const path of validPaths) {
@@ -43,7 +48,10 @@ export async function generateClient() {
       );
       await findFunctionsData(routeDatas);
 
+      console.log(routeDatas);
+
       fnString += await composeClientFunctions(routeDatas);
+      fnRqString += await composeQueries(routeDatas);
       // console.log(routeDatas);
 
       let interfaces = composeInterfacesList(routeDatas);
@@ -56,7 +64,15 @@ export async function generateClient() {
 
     // interfaceString = await extractNeededTypesFromProject({ interfaceList }); ------> TODO: review the whole logic to import types.
 
+    await composeReactQueryFile({
+      fnString: fnRqString,
+      interfaceString,
+      interfaceList,
+    });
+
     await composeClientClass({ fnString, interfaceString, interfaceList });
+
+    console.log(fnRqString);
   }, 1000);
 }
 
@@ -117,7 +133,7 @@ async function extractNeededTypesFromProject({
   return interfaceString;
 }
 
-function getNestedTypesFromTypeString(type: string) {
+export function getNestedTypesFromTypeString(type: string) {
   const nestedTypeName: string[] = [];
   let level = 0;
   let startIndex = type.indexOf("{");
@@ -165,7 +181,10 @@ function getNestedTypesFromTypeString(type: string) {
   return [...new Set([...nestedTypeName])];
 }
 
-async function extractSpecificTypeFromFile(filePath: string, typeName: string) {
+export async function extractSpecificTypeFromFile(
+  filePath: string,
+  typeName: string
+) {
   let finalStr = "";
   const fileString = await fs.readFile(filePath, "utf8");
   const typeStartIndex = fileString.indexOf("interface " + typeName);
@@ -396,7 +415,7 @@ async function composeClientFunctions(routeDatas: RouteData[]) {
   return fnsString;
 }
 
-async function findFunctionsData(routeDatas: RouteData[]) {
+export async function findFunctionsData(routeDatas: RouteData[]) {
   // We now need to find the function .d.ts in the dist folder
   const distPath = `${process.cwd()}/dist`; // TODO add support for custom dist
   const paths = await getFilesForDir(distPath);
@@ -408,7 +427,7 @@ async function findFunctionsData(routeDatas: RouteData[]) {
   }
 }
 
-async function extractReturnedValueFromFunction(
+export async function extractReturnedValueFromFunction(
   filePath: string,
   routeData: RouteData
 ) {
@@ -436,7 +455,7 @@ async function extractReturnedValueFromFunction(
   }
 }
 
-async function findAllAddRouteOccurences(filePath: string) {
+export async function findAllAddRouteOccurences(filePath: string) {
   const file = await fs.readFile(filePath, "utf8");
   const addRouteLocations = [
     ...searchIndexes(file, "addRoute<"),
@@ -445,7 +464,7 @@ async function findAllAddRouteOccurences(filePath: string) {
   return addRouteLocations;
 }
 
-async function getFilesForDir(dirPath: string): Promise<string[]> {
+export async function getFilesForDir(dirPath: string): Promise<string[]> {
   return new Promise((resolve) => {
     const items: string[] = [];
     klaw(dirPath, { depthLimit: -1 })
@@ -454,7 +473,7 @@ async function getFilesForDir(dirPath: string): Promise<string[]> {
   });
 }
 
-interface RouteData {
+export interface RouteData {
   string: string;
   type: "object" | "function" | "variable";
   isImported: boolean;
@@ -467,7 +486,7 @@ interface RouteData {
   payloadType: string;
 }
 
-function findReturnedValue(str: string) {
+export function findReturnedValue(str: string) {
   const res: RouteData = {
     string: "",
     type: "object",
@@ -615,7 +634,7 @@ function findReturnedValue(str: string) {
   return res;
 }
 
-function searchIndexes(source: string, find: string) {
+export function searchIndexes(source: string, find: string) {
   if (!source) {
     return [];
   }
@@ -638,7 +657,7 @@ function searchIndexes(source: string, find: string) {
   return result;
 }
 
-function correctTypeIfClientTypePathIsDefined(typeString: string) {
+export function correctTypeIfClientTypePathIsDefined(typeString: string) {
   let mustAddPromise = false;
   if (!process.env.CLIENT_TYPE_PATH) {
     return typeString;
@@ -744,7 +763,7 @@ function isLetter(str: string) {
  * and returns
  * ["Artist['videos']", "string"]
  */
-function extractTypesFromObj(obj: string) {
+export function extractTypesFromObj(obj: string) {
   let types: string[] = [];
   let started = false;
   let currentType = "";
