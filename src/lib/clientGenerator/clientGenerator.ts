@@ -51,8 +51,10 @@ export async function generateClient() {
       console.log(routeDatas);
 
       fnString += await composeClientFunctions(routeDatas);
-      fnRqString += await composeQueries(routeDatas);
-      // console.log(routeDatas);
+
+      if (process.env.REACT_QUERY) {
+        fnRqString += await composeQueries(routeDatas);
+      }
 
       let interfaces = composeInterfacesList(routeDatas);
       interfaceList = [...interfaceList, ...interfaces];
@@ -64,11 +66,13 @@ export async function generateClient() {
 
     // interfaceString = await extractNeededTypesFromProject({ interfaceList }); ------> TODO: review the whole logic to import types.
 
-    await composeReactQueryFile({
-      fnString: fnRqString,
-      interfaceString,
-      interfaceList,
-    });
+    if (process.env.REACT_QUERY) {
+      await composeReactQueryFile({
+        fnString: fnRqString,
+        interfaceString,
+        interfaceList,
+      });
+    }
 
     await composeClientClass({ fnString, interfaceString, interfaceList });
 
