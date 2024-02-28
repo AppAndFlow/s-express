@@ -102,6 +102,7 @@ export interface Config {
     res: Response,
     next: NextFunction
   ) => void;
+  serverless?: boolean;
 }
 
 export interface DocServer {
